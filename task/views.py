@@ -1,30 +1,33 @@
-# tracker/views.py
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
+from django.views.generic import TemplateView
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
-from .models import TaskDay
-from datetime import date, timedelta
+from django.shortcuts import redirect
+from datetime import date
+from .forms import TaskDayForm
+from . import services
 
-@login_required
-def dashboard(request):
-    if request.method == 'POST':
-        try:
-            selected_date = request.POST.get('date')
-            TaskDay.objects.create(user=request.user, date=selected_date)
+class DashboardView(LoginRequiredMixin, TemplateView):
+    template_name = 'home.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+
+        context.update(services.get_weekly_chart_data(user))
+        context.update(services.get_calendar_data(user, self.request))
+        context.update(services.get_monthly_chart_data(user, self.request))
+        
+        context['today'] = date.today().isoformat()
+        context['form'] = TaskDayForm()
+        
+        return context
+
+    def post(self, request, *args, **kwargs):
+        form = TaskDayForm(request.POST, user=request.user)
+        if form.is_valid():
+            form.save()
             messages.success(request, 'Dia marcado com sucesso!')
-        except:
-            messages.error(request, 'Erro: Data já marcada ou inválida!')
-    
-    task_days = TaskDay.objects.filter(user=request.user).order_by('date')
-
-    today = date.today()
-
-    weekly_dates = [today - timedelta(days=i) for i in range(6, -1, -1)]
-    weekly_data = {day.date: True for day in task_days.filter(date__gte=weekly_dates[0])}
-    
-    context = {
-        'weekly_labels': [d.strftime('%d/%m') for d in weekly_dates],
-        'weekly_values': [1 if d in weekly_data else 0 for d in weekly_dates],
-        'today': today.isoformat()
-    }
-    return render(request, 'home.html', context)
+        else:
+            for error in form.errors.values():
+                messages.error(request, error)
+        return redirect('dashboard')

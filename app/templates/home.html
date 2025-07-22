@@ -1,74 +1,206 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="card mb-4">
-    <div class="card-body">
-        <h5 class="card-title">Marcar Dia de Estudo</h5>
-        <form method="post">
-            {% csrf_token %}
-            <div class="row">
-                <div class="col-md-4">
-                    <input type="date" 
-                           class="form-control" 
-                           name="date" 
-                           value="{{ today }}"
-                           max="{{ today }}">
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check2-circle"></i> Marcar
-                    </button>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
+<div class="container">
 
-<div class="row">
-    <div class="col-md-6 mb-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Frequência Semanal</h5>
-                <canvas id="weeklyChart"></canvas>
-            </div>
-        </div>
-    </div>
-</div>
-
-{% if messages %}
+  {% if messages %}
     {% for message in messages %}
-        <div class="alert alert-{% if message.tags %}{{ message.tags }}{% endif %} mt-3">
-            {{ message }}
-        </div>
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show mt-3" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
     {% endfor %}
-{% endif %}
+  {% endif %}
 
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5 class="card-title"><i class="bi bi-calendar-check"></i> Marcar Dia de Estudo</h5>
+      <form method="post" class="row g-3 mt-2">
+        {% csrf_token %}
+        <div class="col-md-4">
+          <label for="date" class="form-label">Data</label>
+          <input type="date" class="form-control" id="date" name="date" value="{{ today }}" max="{{ today }}" required>
+        </div>
+        <div class="col-md-2 align-self-end">
+          <button type="submit" class="btn btn-primary w-100">
+            <i class="bi bi-check2-circle"></i> Marcar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-7 mb-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5 class="card-title"><i class="bi bi-bar-chart-line"></i> Frequência Semanal</h5>
+          <canvas id="weeklyChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-5 mb-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5 class="card-title"><i class="bi bi-calendar3"></i> Calendário</h5>
+
+          <form method="get" class="mb-3 d-flex align-items-end gap-2">
+            <input type="hidden" name="start_year" value="{{ start_year }}">
+            <input type="hidden" name="end_year" value="{{ end_year }}">
+            
+            <div>
+              <label for="month" class="form-label">Mês</label>
+              <select class="form-select" name="month" id="month">
+                {% for i in months %}
+                  <option value="{{ i }}" {% if i == selected_month %}selected{% endif %}>{{ i }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div>
+              <label for="year" class="form-label">Ano</label>
+              <select class="form-select" name="year" id="year">
+                {% for y in years %}
+                  <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div>
+              <button type="submit" class="btn btn-secondary">Filtrar</button>
+            </div>
+          </form>
+
+          <p class="small mb-3">{{ total_studied }} de {{ total_days }} dias estudados</p>
+
+          <div class="d-grid calendar-grid" style="grid-template-columns: repeat(7, 1fr); gap: 5px;">
+            {% for item in calendar_days %}
+              <div class="text-center p-1 rounded small {% if item.studied %}bg-primary text-white{% else %}border{% endif %}">
+                {{ item.day.day }}
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5 class="card-title"><i class="bi bi-bar-chart"></i> Estudos por Mês</h5>
+      <form method="get" class="row g-2 align-items-end">
+        <input type="hidden" name="month" value="{{ selected_month }}">
+        <input type="hidden" name="year" value="{{ selected_year }}">
+
+        <div class="col-md-2">
+          <label for="start_year" class="form-label">Ano inicial</label>
+          <input type="number" class="form-control" name="start_year" id="start_year" value="{{ start_year }}">
+        </div>
+        <div class="col-md-2">
+          <label for="end_year" class="form-label">Ano final</label>
+          <input type="number" class="form-control" name="end_year" id="end_year" value="{{ end_year }}">
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-secondary w-100">Aplicar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <canvas id="monthlyChart"></canvas>
+    </div>
+  </div>
+
+</div>
+
+{{ weekly_labels|json_script:"weekly-labels-data" }}
+{{ weekly_values|json_script:"weekly-values-data" }}
+{{ monthly_labels|json_script:"monthly-labels-data" }}
+{{ monthly_values|json_script:"monthly-values-data" }}
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const ctx = document.getElementById('weeklyChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: {{ weekly_labels|safe }},
-                datasets: [{
-                    label: 'Dias Estudados',
-                    data: {{ weekly_values }},
-                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
-                        }
-                    }
-                }
-            }
-        });
+  let weeklyChart, monthlyChart;
+
+  function updateChartColors() {
+    const style = getComputedStyle(document.body);
+    const textColor = style.getPropertyValue('--bs-body-color');
+    const gridColor = style.getPropertyValue('--bs-border-color');
+
+    Chart.defaults.color = textColor;
+    Chart.defaults.borderColor = gridColor;
+
+    if (weeklyChart) weeklyChart.update();
+    if (monthlyChart) monthlyChart.update();
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const weeklyLabels = JSON.parse(document.getElementById('weekly-labels-data').textContent);
+    const weeklyValues = JSON.parse(document.getElementById('weekly-values-data').textContent);
+    const monthlyLabels = JSON.parse(document.getElementById('monthly-labels-data').textContent);
+    const monthlyValues = JSON.parse(document.getElementById('monthly-values-data').textContent);
+    
+    const weeklyCtx = document.getElementById('weeklyChart').getContext('2d');
+    weeklyChart = new Chart(weeklyCtx, {
+      type: 'bar',
+      data: {
+        labels: weeklyLabels,
+        datasets: [{
+          label: 'Dias Estudados',
+          data: weeklyValues,
+          backgroundColor: 'rgba(54, 162, 235, 0.6)',
+          borderColor: 'rgba(54, 162, 235, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        aspectRatio: 3,
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { stepSize: 1 }
+          }
+        }
+      }
     });
+
+    const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+    monthlyChart = new Chart(monthlyCtx, {
+      type: 'line',
+      data: {
+        labels: monthlyLabels,
+        datasets: [{
+          label: 'Dias Estudados por Mês',
+          data: monthlyValues,
+          backgroundColor: 'rgba(255, 193, 7, 0.6)',
+          borderColor: 'rgba(255, 193, 7, 1)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.1
+        }]
+      },
+      options: {
+        aspectRatio: 3,
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { stepSize: 1 }
+          }
+        }
+      }
+    });
+    
+    updateChartColors();
+
+    document.querySelectorAll('[data-bs-theme-value]').forEach(toggle => {
+      toggle.addEventListener('click', () => {
+        setTimeout(updateChartColors, 50);
+      });
+    });
+  });
 </script>
 {% endblock %}
