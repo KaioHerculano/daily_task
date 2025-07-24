@@ -1,0 +1,27 @@
+services:
+
+  daily_task_web:
+    build: .
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - 8000:8000
+    depends_on:
+      - daily_task_db
+
+  daily_task_db:
+    image: postgres:15
+    ports:
+      - 5432:5432
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+
+volumes:
+  postgres_data:

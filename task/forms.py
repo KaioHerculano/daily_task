@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from datetime import date
 from .models import TaskDay
 
+
 class TaskDayForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)
