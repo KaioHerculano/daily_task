@@ -1,6 +1,6 @@
 # task/services.py
 
-from datetime import date, timedelta, datetime
+from datetime import date, timedelta
 from calendar import monthrange, month_abbr
 from dateutil.relativedelta import relativedelta
 from .models import TaskDay
@@ -55,7 +55,7 @@ def get_monthly_chart_data(user, request):
         start_year, end_year = end_year, start_year
     
     studies = TaskDay.objects.get_monthly_study_counts(user, start_year, end_year)
-    studies_dict = {entry['month'].date(): entry['total'] for entry in studies}
+    studies_dict = {entry['month']: entry['total'] for entry in studies}
 
     all_months_in_range = []
     cursor = date(start_year, 1, 1)
