@@ -12,8 +12,6 @@ COPY . .
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
-RUN python manage.py collectstatic --noinput
-
 EXPOSE 8000
 
-CMD python manage.py migrate && gunicorn --bind 0.0.0.0:$PORT app.wsgi:application
+CMD python manage.py migrate && python manage.py collectstatic --noinput && gunicorn --bind 0.0.0.0:$PORT app.wsgi:application
