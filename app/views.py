@@ -23,7 +23,7 @@ class RegisterView(View):
             messages.success(request, f'Bem-vindo, {user.username}! Sua conta foi criada com sucesso.')
             return redirect('dashboard')
         
-        return render(request, 'register.html', {'form': form})
+        return render(request, 'registration/register.html', {'form': form})
 
 
 class ProfileView(LoginRequiredMixin, View):
