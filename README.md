@@ -10,6 +10,7 @@ Uma aplicação web construída com Django para acompanhar e visualizar seus há
 ## Login
 ![Login](screenshots/login.png)
 ## Redefinir Senha
+> Agora você pode redefinir sua senha via e-mail! Basta clicar em "Esqueci minha senha", inserir o e-mail de cadastro e seguir as instruções recebidas na sua caixa de entrada.
 ![Redefinir Senha](screenshots/redefinir_senha.png)
 ## Perfil
 ![Perfil](screenshots/meu_perfil.png)
@@ -19,7 +20,7 @@ Uma aplicação web construída com Django para acompanhar e visualizar seus há
 
 ## ✨ Funcionalidades Principais
 
-- **Autenticação de Usuário Completa:** Cadastro, Login, Logout, "Esqueci minha Senha" e Perfil de Usuário.
+- **Autenticação de Usuário Completa:** Cadastro, Login, Logout, "Esqueci minha Senha" (com envio por e-mail) e Perfil de Usuário.
 - **Dashboard Interativo:** Visualize seus dados de estudo de forma clara e objetiva.
 - **Gráfico de Frequência Semanal:** Mostra a atividade nos últimos 7 dias.
 - **Gráfico de Tendência Mensal:** Acompanha o progresso ao longo dos meses e anos.
@@ -45,12 +46,8 @@ Uma aplicação web construída com Django para acompanhar e visualizar seus há
 #### 1. Clone o Repositório
 
 ```bash
-<<<<<<< HEAD
-git clone https://github.com/seu-usuario/seu-repositorio.git
-=======
 git clone https://github.com/KaioHerculano/daily_task
->>>>>>> 020f46a (update title)
-cd seu-repositorio
+cd daily_task
 ```
 
 #### 2. Crie e Ative um Ambiente Virtual
@@ -58,7 +55,7 @@ cd seu-repositorio
 ```bash
 # Windows
 python -m venv venv
-.\venv\Scripts\activate
+.\env\Scripts\ctivate
 
 # macOS / Linux
 python3 -m venv venv
@@ -84,18 +81,26 @@ python manage.py createsuperuser
 
 #### 1. Configure o arquivo `.env`
 
+Crie um arquivo `.env` na raiz do projeto com o seguinte conteúdo:
+
 ```env
-SECRET_KEY="sua-secret-key"
+SECRET_KEY="sua-secret-key-super-segura-aqui"
 DEBUG=True
 ALLOWED_HOSTS=localhost,127.0.0.1
 
 POSTGRES_DB=daily_db
-POSTGRES_USER=usuario
-POSTGRES_PASSWORD=senha
-POSTGRES_HOST=daily_task_db
+POSTGRES_USER=usuario_db
+POSTGRES_PASSWORD=senha_forte_db
+POSTGRES_HOST=db
 POSTGRES_PORT=5432
+DATABASE_URL=
 PORT=8000
+
+EMAIL_HOST_USER=seu-email@gmail.com
+GMAIL_APP_PASSWORD=sua-senha-de-app-de-16-digitos
 ```
+
+> Obs: Para o reset de senha funcionar, é necessário configurar o `EMAIL_HOST_USER` (seu e-mail) e o `GMAIL_APP_PASSWORD` (senha de app gerada no Gmail).
 
 #### 2. Execute com Docker Compose
 
@@ -105,7 +110,7 @@ docker-compose up --build
 
 #### 3. Acesse a aplicação
 
-Abra o navegador em:
+Abra no navegador:
 
 ```
 http://localhost:8000
@@ -123,5 +128,3 @@ http://localhost:8000
 ## 📅 Status do Projeto
 
 > Em desenvolvimento ativo. Contribuições são bem-vindas!
-
-
