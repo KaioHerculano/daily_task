@@ -1,4 +1,4 @@
-#  Tracker de Estudos (Study Tracker)
+#  Tracker de Estudos (Study Task)
 
 ![Python](https://img.shields.io/badge/Python-3.11+-blue?style=for-the-badge&logo=python)
 ![Django](https://img.shields.io/badge/Django-4.2+-green?style=for-the-badge&logo=django)
@@ -45,7 +45,11 @@ Uma aplicação web construída com Django para acompanhar e visualizar seus há
 #### 1. Clone o Repositório
 
 ```bash
+<<<<<<< HEAD
 git clone https://github.com/seu-usuario/seu-repositorio.git
+=======
+git clone https://github.com/KaioHerculano/daily_task
+>>>>>>> 020f46a (update title)
 cd seu-repositorio
 ```
 
