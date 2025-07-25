@@ -1,4 +1,4 @@
-#  Tracker de Estudos (Study Task)
+#  Tarefas Diárias (Study Task)
 
 ![Python](https://img.shields.io/badge/Python-3.11+-blue?style=for-the-badge&logo=python)
 ![Django](https://img.shields.io/badge/Django-4.2+-green?style=for-the-badge&logo=django)
