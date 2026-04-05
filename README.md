@@ -2,6 +2,7 @@
 
 ![Python](https://img.shields.io/badge/Python-3.11+-blue?style=for-the-badge&logo=python)
 ![Django](https://img.shields.io/badge/Django-4.2+-green?style=for-the-badge&logo=django)
+![Poetry](https://img.shields.io/badge/Poetry-blueviolet?style=for-the-badge&logo=poetry)
 ![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-purple?style=for-the-badge&logo=bootstrap)
 
 Uma aplicação web construída com Django para acompanhar e visualizar seus hábitos de estudo diários, ajudando a manter a consistência e a motivação.
