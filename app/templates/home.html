@@ -56,11 +56,11 @@
             <span class="badge bg-primary rounded-pill">{{ days_studied_this_week }} / {{ weekly_goal }} dias</span>
           </div>
           <div class="progress" style="height: 12px; border-radius: 10px;">
-            <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" 
-                 role="progressbar" 
-                 style="width: {{ goal_percentage }}%;" 
-                 aria-valuenow="{{ goal_percentage }}" 
-                 aria-valuemin="0" 
+            <div class="progress-bar bg-success progress-bar-striped progress-bar-animated"
+                 role="progressbar"
+                 style="width: {{ goal_percentage }}%;"
+                 aria-valuenow="{{ goal_percentage }}"
+                 aria-valuemin="0"
                  aria-valuemax="100">
             </div>
           </div>
@@ -88,7 +88,7 @@
           <form method="get" class="mb-3 d-flex align-items-end gap-2">
             <input type="hidden" name="start_year" value="{{ start_year }}">
             <input type="hidden" name="end_year" value="{{ end_year }}">
-            
+
             <div>
               <label for="month" class="form-label">Mês</label>
               <select class="form-select" name="month" id="month">
@@ -183,7 +183,7 @@
     const weeklyValues = JSON.parse(document.getElementById('weekly-values-data').textContent);
     const monthlyLabels = JSON.parse(document.getElementById('monthly-labels-data').textContent);
     const monthlyValues = JSON.parse(document.getElementById('monthly-values-data').textContent);
-    
+
     const weeklyCtx = document.getElementById('weeklyChart').getContext('2d');
     weeklyChart = new Chart(weeklyCtx, {
       type: 'bar',
@@ -233,7 +233,7 @@
         }
       }
     });
-    
+
     updateChartColors();
 
     document.querySelectorAll('[data-bs-theme-value]').forEach(toggle => {
