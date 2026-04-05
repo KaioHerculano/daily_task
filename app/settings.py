@@ -31,7 +31,20 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",")
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
+raw_origins = os.getenv("CSRF_TRUSTED_ORIGINS", "")
+CSRF_TRUSTED_ORIGINS = []
+
+if raw_origins:
+    CSRF_TRUSTED_ORIGINS = [
+        (
+            origin
+            if origin.startswith("http://") or origin.startswith("https://")
+            else f"https://{origin}"
+        )
+        for origin in raw_origins.split(",")
+        if origin.strip()
+    ]
 
 
 # Application definition
