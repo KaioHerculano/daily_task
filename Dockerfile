@@ -23,6 +23,6 @@ RUN poetry install --no-root
 COPY . /app/
 
 
-EXPOSE 8000
+EXPOSE 8002
 
 CMD python manage.py migrate && python manage.py collectstatic --noinput && gunicorn --bind 0.0.0.0:$PORT app.wsgi:application
