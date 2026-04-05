@@ -33,16 +33,6 @@ class TaskDay(models.Model):
         return f"{self.user.username} - {self.date}"
 
 
-class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
-    weekly_goal = models.PositiveIntegerField(
-        default=5, verbose_name="Meta Semanal (dias)"
-    )
-
-    def __str__(self):
-        return f"Perfil de {self.user.username}"
-
-
 class DailyReminderLog(models.Model):
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="reminder_logs"

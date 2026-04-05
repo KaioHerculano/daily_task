@@ -6,7 +6,8 @@ from django.test import TestCase
 from django.utils import timezone
 from faker import Faker
 
-from task.models import DailyReminderLog, TaskDay, UserProfile
+from accounts.models import UserProfile
+from task.models import DailyReminderLog, TaskDay
 from task.services import get_streak_data, get_weekly_goal_data
 from task.tasks import send_daily_reminders
 
