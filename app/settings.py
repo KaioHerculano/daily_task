@@ -14,6 +14,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from decouple import config
+from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -156,3 +157,14 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
 CELERY_BROKER_URL = config("CELERY_BROKER_URL", default="redis://redis:6379/0")
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+
+# Configuração do Celery Beat
+CELERY_BEAT_SCHEDULE = {
+    'enviar-lembrete-diario-as-20h': {
+        'task': 'task.tasks.send_daily_reminders',
+        'schedule': crontab(minute='*')
+    },
+}
+
+BASE_URL = config('BASE_URL', default='http://127.0.0.1:8000')

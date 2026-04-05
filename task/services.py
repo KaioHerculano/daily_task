@@ -1,9 +1,74 @@
 # task/services.py
 
 from datetime import date, timedelta
+from django.utils import timezone
 from calendar import monthrange, month_abbr
 from dateutil.relativedelta import relativedelta
 from .models import TaskDay
+
+
+def get_streak_data(user):
+    """Calcula a ofensiva (streak) atual e a maior já alcançada."""
+    dates = list(TaskDay.objects.filter(user=user).order_by('-date').values_list('date', flat=True).distinct())
+    
+    if not dates:
+        return {'current_streak': 0, 'best_streak': 0}
+        
+    today = timezone.localdate()
+    current_streak = 0
+    date_set = set(dates)
+
+    check_date = today
+    if check_date in date_set:
+        current_streak += 1
+        check_date -= timedelta(days=1)
+    elif (check_date - timedelta(days=1)) in date_set:
+        check_date -= timedelta(days=1)
+        current_streak += 1
+        check_date -= timedelta(days=1)
+    
+    if current_streak > 0:
+        while check_date in date_set:
+            current_streak += 1
+            check_date -= timedelta(days=1)
+
+    best_streak = 0
+    temp_streak = 1
+    for i in range(1, len(dates)):
+        if (dates[i-1] - dates[i]).days == 1:
+            temp_streak += 1
+        else:
+            best_streak = max(best_streak, temp_streak)
+            temp_streak = 1
+    best_streak = max(best_streak, temp_streak)
+    
+    return {'current_streak': current_streak, 'best_streak': best_streak}
+
+
+def get_weekly_goal_data(user):
+    """Calcula o progresso da meta semanal."""
+    goal = 5
+    if hasattr(user, 'profile'):
+        goal = user.profile.weekly_goal
+
+    today = timezone.localdate()
+    start_of_week = today - timedelta(days=today.weekday())
+    end_of_week = start_of_week + timedelta(days=6)
+    
+    days_studied = TaskDay.objects.filter(
+        user=user, 
+        date__gte=start_of_week, 
+        date__lte=end_of_week
+    ).values('date').distinct().count()
+    
+    percentage = min(int((days_studied / goal) * 100), 100) if goal > 0 else 0
+    
+    return {
+        'weekly_goal': goal,
+        'days_studied_this_week': days_studied,
+        'goal_percentage': percentage
+    }
+
 
 def get_weekly_chart_data(user):
     """Prepara os dados para o gráfico de frequência semanal."""

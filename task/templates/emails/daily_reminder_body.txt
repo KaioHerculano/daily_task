@@ -1,0 +1,5 @@
+Olá {{ user.username }},
+
+Notamos que você ainda não registrou seus estudos hoje. Mantenha sua consistência e não perca sua ofensiva!
+
+Acesse sua dashboard e marque seu dia de estudo.
