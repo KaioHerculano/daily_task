@@ -163,7 +163,7 @@ CELERY_TIMEZONE = TIME_ZONE
 CELERY_BEAT_SCHEDULE = {
     'enviar-lembrete-diario-as-20h': {
         'task': 'task.tasks.send_daily_reminders',
-        'schedule': crontab(minute='*')
+        'schedule': crontab(hour=20, minute=0),
     },
 }
 
