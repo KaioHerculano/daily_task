@@ -9,6 +9,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "asgiref (==3.8.1)",
+    "celery (>=5.3.6)",
     "django (==5.2.3)",
     "django-bootstrap5 (==25.1)",
     "dotenv (==0.9.9)",
@@ -18,6 +19,7 @@ dependencies = [
     "python-dateutil (==2.9.0.post0)",
     "python-decouple (==3.8)",
     "python-dotenv (==1.1.1)",
+    "redis (>=5.0.1)",
     "six (==1.17.0)",
     "sqlparse (==0.5.3)",
     "tzdata (==2025.2)",
