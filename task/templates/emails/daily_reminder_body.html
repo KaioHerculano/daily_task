@@ -1,0 +1,9 @@
+{% extends "base_email.html" %}
+
+{% block content %}
+    <h2>Olá, {{ user.username }}!</h2>
+    <p>Notamos que você ainda não registrou seus estudos hoje. Mantenha sua consistência e não perca sua ofensiva!</p>
+    <div style="text-align: center;">
+        <a href="{{ base_url }}/" class="btn">Acessar Minha Dashboard</a>
+    </div>
+{% endblock %}

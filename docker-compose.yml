@@ -42,5 +42,17 @@ services:
       - daily_task_db
       - redis
 
+  celery-beat:
+    build: .
+    command: celery -A app beat -l info
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+    depends_on:
+      - daily_task_db
+      - redis
+
 volumes:
   postgres_data:

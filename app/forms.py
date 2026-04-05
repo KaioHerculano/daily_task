@@ -1,18 +1,19 @@
 # app/forms.py
 
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import PasswordResetForm, UserCreationForm
 from django.contrib.auth.models import User
-from django.contrib.auth.forms import PasswordResetForm
 from django.template.loader import render_to_string
+
 from app.tasks import send_email_task
+
 
 class UserRegisterForm(UserCreationForm):
     email = forms.EmailField()
 
     class Meta:
         model = User
-        fields = ['username', 'email']
+        fields = ["username", "email"]
 
 
 class UserUpdateForm(forms.ModelForm):
@@ -20,7 +21,7 @@ class UserUpdateForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ['username', 'email']
+        fields = ["username", "email"]
 
 
 class AsyncPasswordResetForm(PasswordResetForm):

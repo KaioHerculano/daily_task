@@ -10,7 +10,7 @@ def mask_email(email: str) -> str:
         masked_local = local[:2] + "***" + local[-1]
 
     domain_parts = domain.split(".")
-    
+
     if len(domain_parts) >= 2:
         name = domain_parts[0]
         tld = ".".join(domain_parts[1:])

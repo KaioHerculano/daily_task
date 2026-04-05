@@ -7,22 +7,22 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('task', '0001_initial'),
+        ("task", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AlterUniqueTogether(
-            name='taskday',
-            unique_together={('user', 'date')},
+            name="taskday",
+            unique_together={("user", "date")},
         ),
         migrations.AlterField(
-            model_name='taskday',
-            name='date',
+            model_name="taskday",
+            name="date",
             field=models.DateField(),
         ),
         migrations.RemoveField(
-            model_name='taskday',
-            name='created_at',
+            model_name="taskday",
+            name="created_at",
         ),
     ]

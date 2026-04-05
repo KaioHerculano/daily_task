@@ -19,14 +19,14 @@
               {% endfor %}
             </div>
           {% endif %}
-          
+
           {% for field in form %}
             <div class="mb-3">
               <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-              <input 
-                type="{{ field.field.widget.input_type }}" 
-                name="{{ field.name }}" 
-                class="form-control form-control-lg" 
+              <input
+                type="{{ field.field.widget.input_type }}"
+                name="{{ field.name }}"
+                class="form-control form-control-lg"
                 id="{{ field.id_for_label }}"
                 placeholder="{{ field.label }}"
               >
@@ -38,7 +38,7 @@
               {% endfor %}
             </div>
           {% endfor %}
-          
+
           <div class="d-grid">
             <button type="submit" class="btn btn-primary btn-lg">Criar Conta</button>
           </div>

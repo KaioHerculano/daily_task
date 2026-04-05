@@ -30,6 +30,46 @@
     </div>
   </div>
 
+  <div class="row mb-4">
+    <!-- Card Ofensiva -->
+    <div class="col-md-4 mb-3 mb-md-0">
+      <div class="card h-100 border-0 shadow-sm rounded-4">
+        <div class="card-body d-flex align-items-center">
+          <div class="flex-shrink-0 bg-warning bg-opacity-10 p-3 rounded-circle text-warning">
+            <i class="bi bi-fire fs-3"></i>
+          </div>
+          <div class="ms-3">
+            <h6 class="text-muted mb-1">Ofensiva Atual</h6>
+            <h3 class="mb-0 fw-bold">{{ current_streak }} <span class="fs-6 fw-normal text-muted">dias</span></h3>
+            <small class="text-muted">Melhor ofensiva: {{ best_streak }} dias</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card Meta Semanal -->
+    <div class="col-md-8">
+      <div class="card h-100 border-0 shadow-sm rounded-4">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="text-muted mb-0"><i class="bi bi-bullseye text-primary me-2"></i>Meta Semanal</h6>
+            <span class="badge bg-primary rounded-pill">{{ days_studied_this_week }} / {{ weekly_goal }} dias</span>
+          </div>
+          <div class="progress" style="height: 12px; border-radius: 10px;">
+            <div class="progress-bar bg-success progress-bar-striped progress-bar-animated"
+                 role="progressbar"
+                 style="width: {{ goal_percentage }}%;"
+                 aria-valuenow="{{ goal_percentage }}"
+                 aria-valuemin="0"
+                 aria-valuemax="100">
+            </div>
+          </div>
+          <small class="text-muted d-block mt-2 text-end">{{ goal_percentage }}% concluído</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="row">
     <div class="col-md-7 mb-4">
       <div class="card h-100">
@@ -48,7 +88,7 @@
           <form method="get" class="mb-3 d-flex align-items-end gap-2">
             <input type="hidden" name="start_year" value="{{ start_year }}">
             <input type="hidden" name="end_year" value="{{ end_year }}">
-            
+
             <div>
               <label for="month" class="form-label">Mês</label>
               <select class="form-select" name="month" id="month">
@@ -143,7 +183,7 @@
     const weeklyValues = JSON.parse(document.getElementById('weekly-values-data').textContent);
     const monthlyLabels = JSON.parse(document.getElementById('monthly-labels-data').textContent);
     const monthlyValues = JSON.parse(document.getElementById('monthly-values-data').textContent);
-    
+
     const weeklyCtx = document.getElementById('weeklyChart').getContext('2d');
     weeklyChart = new Chart(weeklyCtx, {
       type: 'bar',
@@ -193,7 +233,7 @@
         }
       }
     });
-    
+
     updateChartColors();
 
     document.querySelectorAll('[data-bs-theme-value]').forEach(toggle => {
