@@ -1,14 +1,29 @@
-asgiref==3.8.1
-Django==5.2.3
-django-bootstrap5==25.1
-dotenv==0.9.9
-gunicorn==23.0.0
-packaging==25.0
-psycopg2-binary==2.9.10
-python-dateutil==2.9.0.post0
-python-decouple==3.8
-python-dotenv==1.1.1
-six==1.17.0
-sqlparse==0.5.3
-tzdata==2025.2
-whitenoise==6.9.0
+amqp==5.3.1 ; python_version >= "3.11"
+asgiref==3.8.1 ; python_version >= "3.11"
+async-timeout==5.0.1 ; python_version >= "3.11" and python_full_version < "3.11.3"
+billiard==4.2.4 ; python_version >= "3.11"
+celery==5.6.3 ; python_version >= "3.11"
+click-didyoumean==0.3.1 ; python_version >= "3.11"
+click-plugins==1.1.1.2 ; python_version >= "3.11"
+click-repl==0.3.0 ; python_version >= "3.11"
+click==8.3.2 ; python_version >= "3.11"
+colorama==0.4.6 ; python_version >= "3.11" and platform_system == "Windows"
+django-bootstrap5==25.1 ; python_version >= "3.11"
+django==5.2.3 ; python_version >= "3.11"
+dotenv==0.9.9 ; python_version >= "3.11"
+gunicorn==23.0.0 ; python_version >= "3.11"
+kombu==5.6.2 ; python_version >= "3.11"
+packaging==25.0 ; python_version >= "3.11"
+prompt-toolkit==3.0.52 ; python_version >= "3.11"
+psycopg2-binary==2.9.10 ; python_version >= "3.11"
+python-dateutil==2.9.0.post0 ; python_version >= "3.11"
+python-decouple==3.8 ; python_version >= "3.11"
+python-dotenv==1.1.1 ; python_version >= "3.11"
+redis==7.4.0 ; python_version >= "3.11"
+six==1.17.0 ; python_version >= "3.11"
+sqlparse==0.5.3 ; python_version >= "3.11"
+tzdata==2025.2 ; python_version >= "3.11"
+tzlocal==5.3.1 ; python_version >= "3.11"
+vine==5.1.0 ; python_version >= "3.11"
+wcwidth==0.6.0 ; python_version >= "3.11"
+whitenoise==6.9.0 ; python_version >= "3.11"

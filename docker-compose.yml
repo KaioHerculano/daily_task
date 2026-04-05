@@ -9,6 +9,7 @@ services:
       - 8000:8000
     depends_on:
       - daily_task_db
+      - redis
 
   daily_task_db:
     image: postgres:15
@@ -22,6 +23,24 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: always
+
+  celery:
+    build: .
+    command: celery -A app worker -l info
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+    depends_on:
+      - daily_task_db
+      - redis
 
 volumes:
   postgres_data:
