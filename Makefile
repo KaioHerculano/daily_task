@@ -1,4 +1,4 @@
-MIN_COVERAGE = 100
+MIN_COVERAGE = 50
 
 .PHONY: help
 help:

@@ -48,6 +48,8 @@ jobs:
       POSTGRES_HOST: localhost
       POSTGRES_PORT: 5432
       CELERY_BROKER_URL: "redis://localhost:6379/0"
+      EMAIL_HOST_PASSWORD: "dummy_password_for_ci"
+      DEFAULT_FROM_EMAIL: "noreply@example.com"
 
     steps:
       - name: Checkout do Repositório
