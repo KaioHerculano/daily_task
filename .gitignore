@@ -5,3 +5,5 @@ db.sqlite3
 data
 .vscode
 .vscode/
+.coverage
+.coveragerc
