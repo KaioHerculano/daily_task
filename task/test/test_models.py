@@ -18,7 +18,11 @@ class StudyDomainModelsTest(TestCase):
         start_time = timezone.now() - timedelta(hours=1)
         end_time = start_time + timedelta(hours=1)
         session = StudySession.objects.create(
-            user=self.user, topic=self.topic, start_time=start_time, end_time=end_time
+            user=self.user,
+            topic=self.topic,
+            objective_text="Study algebra",
+            start_time=start_time,
+            end_time=end_time,
         )
         self.assertEqual(session.gross_time.total_seconds(), 3600)
         self.assertEqual(session.paused_time.total_seconds(), 0)
@@ -28,7 +32,11 @@ class StudyDomainModelsTest(TestCase):
         start_time = timezone.now() - timedelta(hours=2)
         end_time = start_time + timedelta(hours=2)
         session = StudySession.objects.create(
-            user=self.user, topic=self.topic, start_time=start_time, end_time=end_time
+            user=self.user,
+            topic=self.topic,
+            objective_text="Study algebra",
+            start_time=start_time,
+            end_time=end_time,
         )
         SessionPause.objects.create(
             session=session,
@@ -49,6 +57,7 @@ class StudyDomainModelsTest(TestCase):
         session = StudySession.objects.create(
             user=self.user,
             topic=self.topic,
+            objective_text="Study algebra",
             start_time=start_time,
             status=StudySession.Status.IN_PROGRESS,
         )
