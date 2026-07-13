@@ -31,7 +31,7 @@ case "$APP_ROLE" in
     echo "Ajustando permissões de mídia e estáticos..."
     mkdir -p /app/media/avatars /app/static
     chown -R root:root /app/media
-    chmod -R 777 /app/media
+    chmod -R 755 /app/media
 
     echo "Iniciando servidor web na porta 8002..."
     exec gunicorn app.wsgi:application --bind 0.0.0.0:8002

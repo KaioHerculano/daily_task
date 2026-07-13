@@ -1,19 +1,25 @@
 from datetime import timedelta
 from unittest.mock import patch
+
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.utils import timezone
 from faker import Faker
+
 from accounts.models import UserProfile
 from task.models import DailyReminderLog, TaskDay
 from task.services import get_streak_data, get_weekly_goal_data
 from task.tasks import send_daily_reminders
+
 fake = Faker()
+
 
 class DailyReminderTaskTest(TestCase):
 
     def setUp(self):
-        self.user = User.objects.create_user(username=fake.user_name(), email=fake.email(), password=fake.password())
+        self.user = User.objects.create_user(
+            username=fake.user_name(), email=fake.email(), password=fake.password()
+        )
         self.profile, _ = UserProfile.objects.get_or_create(user=self.user)
         self.today = timezone.localdate()
 
@@ -24,8 +30,8 @@ class DailyReminderTaskTest(TestCase):
         TaskDay.objects.create(user=self.user, date=self.today - timedelta(days=4))
         TaskDay.objects.create(user=self.user, date=self.today - timedelta(days=5))
         data = get_streak_data(self.user)
-        self.assertEqual(data['current_streak'], 3)
-        self.assertEqual(data['best_streak'], 3)
+        self.assertEqual(data["current_streak"], 3)
+        self.assertEqual(data["best_streak"], 3)
 
     def test_weekly_goal_calculation(self):
         self.profile.weekly_goal = 4
@@ -34,11 +40,11 @@ class DailyReminderTaskTest(TestCase):
         TaskDay.objects.create(user=self.user, date=start_of_week)
         TaskDay.objects.create(user=self.user, date=start_of_week + timedelta(days=1))
         data = get_weekly_goal_data(self.user)
-        self.assertEqual(data['weekly_goal'], 4)
-        self.assertEqual(data['days_studied_this_week'], 2)
-        self.assertEqual(data['goal_percentage'], 50)
+        self.assertEqual(data["weekly_goal"], 4)
+        self.assertEqual(data["days_studied_this_week"], 2)
+        self.assertEqual(data["goal_percentage"], 50)
 
-    @patch('task.tasks.process_user_reminder.delay')
+    @patch("task.tasks.process_user_reminder.delay")
     def test_send_daily_reminders_prevents_duplicates(self, mock_process_reminder):
         user2 = User.objects.create_user(username=fake.user_name(), email=fake.email())
         TaskDay.objects.create(user=user2, date=self.today)
