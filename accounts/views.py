@@ -4,7 +4,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect, render
 from django.views import View
 
-from .forms import UserRegisterForm, UserUpdateForm
+from .forms import UserProfileForm, UserRegisterForm, UserUpdateForm
+from .services import update_user_profile
 
 
 class RegisterView(View):
@@ -32,12 +33,21 @@ class ProfileView(LoginRequiredMixin, View):
 
     def get(self, request):
         form = UserUpdateForm(instance=request.user)
-        return render(request, "profile.html", {"form": form})
+        profile_form = UserProfileForm(instance=request.user.profile)
+        return render(
+            request, "profile.html", {"form": form, "profile_form": profile_form}
+        )
 
     def post(self, request):
         form = UserUpdateForm(request.POST, instance=request.user)
-        if form.is_valid():
+        profile_form = UserProfileForm(request.POST, instance=request.user.profile)
+
+        if form.is_valid() and profile_form.is_valid():
             form.save()
+            update_user_profile(request.user, profile_form.cleaned_data)
             messages.success(request, "Seu perfil foi atualizado com sucesso!")
             return redirect("profile")
-        return render(request, "profile.html", {"form": form})
+
+        return render(
+            request, "profile.html", {"form": form, "profile_form": profile_form}
+        )

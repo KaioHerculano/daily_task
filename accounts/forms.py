@@ -22,6 +22,19 @@ class UserUpdateForm(forms.ModelForm):
         fields = ["username", "email"]
 
 
+class UserProfileForm(forms.ModelForm):
+    class Meta:
+        from .models import UserProfile
+
+        model = UserProfile
+        fields = [
+            "timezone",
+            "weekly_goal_hours",
+            "preferred_study_time",
+            "weekly_goal",
+        ]
+
+
 class AsyncPasswordResetForm(PasswordResetForm):
 
     def send_mail(
