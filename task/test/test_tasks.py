@@ -34,8 +34,8 @@ class DailyReminderTaskTest(TestCase):
         self.assertEqual(data["best_streak"], 3)
 
     def test_weekly_goal_calculation(self):
-        self.profile.weekly_goal = 4
-        self.profile.save()
+        self.user.profile.weekly_goal = 4
+        self.user.profile.save()
         start_of_week = self.today - timedelta(days=self.today.weekday())
         TaskDay.objects.create(user=self.user, date=start_of_week)
         TaskDay.objects.create(user=self.user, date=start_of_week + timedelta(days=1))
