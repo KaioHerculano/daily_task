@@ -1,164 +1,600 @@
 {% extends 'base.html' %}
 
+{% block styles %}
+<style>
+  .tw-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  .study-dashboard {
+    --dt-bg: #f8fafc;
+    --dt-surface: #ffffff;
+    --dt-muted-surface: #f1f5f9;
+    --dt-soft-blue: #eff6ff;
+    --dt-soft-amber: #fffbeb;
+    --dt-soft-red: #fef2f2;
+    --dt-border: #e2e8f0;
+    --dt-border-strong: #cbd5e1;
+    --dt-text: #020617;
+    --dt-text-strong: #0f172a;
+    --dt-text-muted: #64748b;
+    --dt-text-soft: #94a3b8;
+    --dt-blue: #2563eb;
+    --dt-blue-strong: #1d4ed8;
+    --dt-blue-text: #1e40af;
+    --dt-amber-text: #b45309;
+    --dt-shadow: 0 18px 48px -32px rgba(15, 23, 42, 0.35);
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+  }
+
+  [data-bs-theme="dark"] .study-dashboard {
+    --dt-bg: #0f172a;
+    --dt-surface: #111827;
+    --dt-muted-surface: #1e293b;
+    --dt-soft-blue: rgba(37, 99, 235, 0.16);
+    --dt-soft-amber: rgba(180, 83, 9, 0.16);
+    --dt-soft-red: rgba(220, 38, 38, 0.14);
+    --dt-border: #334155;
+    --dt-border-strong: #475569;
+    --dt-text: #f8fafc;
+    --dt-text-strong: #e2e8f0;
+    --dt-text-muted: #94a3b8;
+    --dt-text-soft: #64748b;
+    --dt-blue: #3b82f6;
+    --dt-blue-strong: #60a5fa;
+    --dt-blue-text: #bfdbfe;
+    --dt-amber-text: #fcd34d;
+    --dt-shadow: 0 22px 56px -34px rgba(0, 0, 0, 0.78);
+  }
+
+  .tw-min-h-screen { min-height: 100vh; }
+  .tw-bg-slate-50 { background-color: var(--dt-bg); }
+  .tw-bg-white { background-color: var(--dt-surface); }
+  .tw-bg-blue-50 { background-color: var(--dt-soft-blue); }
+  .tw-bg-blue-600 { background-color: var(--dt-blue); }
+  .tw-bg-slate-100 { background-color: var(--dt-muted-surface); }
+  .tw-bg-slate-900 { background-color: #0f172a; }
+  .tw-bg-amber-50 { background-color: var(--dt-soft-amber); }
+  .tw-bg-red-50 { background-color: var(--dt-soft-red); }
+  .tw-bg-slate-300 { background-color: var(--dt-border-strong); }
+  .tw-text-slate-950 { color: var(--dt-text); }
+  .tw-text-slate-900 { color: var(--dt-text-strong); }
+  .tw-text-slate-700 { color: #334155; }
+  .tw-text-slate-600 { color: #475569; }
+  .tw-text-slate-500 { color: var(--dt-text-muted); }
+  .tw-text-slate-400 { color: var(--dt-text-soft); }
+  .tw-text-blue-800 { color: var(--dt-blue-text); }
+  .tw-text-blue-700 { color: var(--dt-blue-strong); }
+  .tw-text-blue-600 { color: var(--dt-blue); }
+  .tw-text-white { color: #ffffff; }
+  .tw-text-amber-700 { color: var(--dt-amber-text); }
+  .tw-border { border-width: 1px; border-style: solid; }
+  .tw-border-b { border-bottom-width: 1px; border-bottom-style: solid; }
+  .tw-border-dashed { border-style: dashed; }
+  .tw-border-slate-200 { border-color: var(--dt-border); }
+  .tw-border-slate-300 { border-color: var(--dt-border-strong); }
+  .tw-border-blue-100 { border-color: rgba(96, 165, 250, 0.28); }
+  .tw-rounded-lg,
+  .tw-rounded-xl,
+  .tw-rounded-2xl { border-radius: 8px; }
+  .tw-rounded-full { border-radius: 9999px; }
+  .tw-shadow-soft { box-shadow: var(--dt-shadow); }
+  .tw-shadow-sm { box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.08); }
+  .tw-mx-auto { margin-left: auto; margin-right: auto; }
+  .tw-mt-1 { margin-top: 0.25rem; }
+  .tw-mt-2 { margin-top: 0.5rem; }
+  .tw-mt-4 { margin-top: 1rem; }
+  .tw-mt-5 { margin-top: 1.25rem; }
+  .tw-mt-6 { margin-top: 1.5rem; }
+  .tw-mb-0 { margin-bottom: 0; }
+  .tw-max-w-2xl { max-width: 42rem; }
+  .tw-max-w-7xl { max-width: 80rem; }
+  .tw-max-w-screen-2xl { max-width: 96rem; }
+  .tw-w-full { width: 100%; }
+  .tw-w-24 { width: 6rem; }
+  .tw-h-2 { height: 0.5rem; }
+  .tw-h-2\.5 { height: 0.625rem; }
+  .tw-w-2\.5 { width: 0.625rem; }
+  .tw-h-8 { height: 2rem; }
+  .tw-w-8 { width: 2rem; }
+  .tw-h-9 { height: 2.25rem; }
+  .tw-h-10 { height: 2.5rem; }
+  .tw-h-72 { height: 18rem; }
+  .tw-h-80 { height: 20rem; }
+  .tw-shrink-0 { flex-shrink: 0; }
+  .tw-min-w-0 { min-width: 0; }
+  .tw-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .tw-outline-none { outline: 2px solid transparent; outline-offset: 2px; }
+  .tw-cursor-not-allowed { cursor: not-allowed; }
+  .tw-flex { display: flex; }
+  .tw-inline-flex { display: inline-flex; }
+  .tw-grid { display: grid; }
+  .tw-flex-col { flex-direction: column; }
+  .tw-flex-wrap { flex-wrap: wrap; }
+  .tw-items-center { align-items: center; }
+  .tw-items-start { align-items: flex-start; }
+  .tw-items-end { align-items: flex-end; }
+  .tw-justify-center { justify-content: center; }
+  .tw-justify-between { justify-content: space-between; }
+  .tw-gap-1 { gap: 0.25rem; }
+  .tw-gap-2 { gap: 0.5rem; }
+  .tw-gap-3 { gap: 0.75rem; }
+  .tw-gap-4 { gap: 1rem; }
+  .tw-gap-6 { gap: 1.5rem; }
+  .tw-space-y-3 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.75rem; }
+  .tw-space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top: 1.5rem; }
+  .tw-space-y-8 > :not([hidden]) ~ :not([hidden]) { margin-top: 2rem; }
+  .tw-divide-y.tw-divide-slate-200 > :not([hidden]) ~ :not([hidden]) { border-top: 1px solid var(--dt-border); }
+  .tw-grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+  .tw-grid-cols-7 { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+  .tw-p-3 { padding: 0.75rem; }
+  .tw-p-4 { padding: 1rem; }
+  .tw-p-5 { padding: 1.25rem; }
+  .tw-p-6 { padding: 1.5rem; }
+  .tw-px-2\.5 { padding-left: 0.625rem; padding-right: 0.625rem; }
+  .tw-px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+  .tw-px-4 { padding-left: 1rem; padding-right: 1rem; }
+  .tw-py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+  .tw-py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+  .tw-py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+  .tw-py-8 { padding-top: 2rem; padding-bottom: 2rem; }
+  .tw-text-xs { font-size: 0.75rem; line-height: 1rem; }
+  .tw-text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+  .tw-text-lg { font-size: 1.125rem; line-height: 1.75rem; }
+  .tw-text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+  .tw-font-medium { font-weight: 500; }
+  .tw-font-semibold { font-weight: 600; }
+  .tw-tracking-tight { letter-spacing: 0; }
+  .hover\:tw-bg-blue-700:hover { background-color: var(--dt-blue-strong); }
+  .hover\:tw-bg-slate-50:hover { background-color: var(--dt-muted-surface); }
+  .hover\:tw-bg-slate-800:hover { background-color: #1e293b; }
+  .hover\:tw-bg-red-50:hover { background-color: #fef2f2; }
+  .hover\:tw-text-red-600:hover { color: #dc2626; }
+  .focus\:tw-border-blue-500:focus { border-color: var(--dt-blue); }
+  .focus\:tw-ring-2:focus { box-shadow: 0 0 0 2px rgba(191, 219, 254, 0.9); }
+  .disabled\:tw-cursor-not-allowed:disabled { cursor: not-allowed; }
+  .disabled\:tw-bg-slate-300:disabled { background-color: #cbd5e1; }
+
+  .tw-min-h-screen input,
+  .tw-min-h-screen textarea,
+  .tw-min-h-screen select {
+    background-color: var(--dt-surface);
+    border-color: var(--dt-border);
+    color: var(--dt-text-strong);
+  }
+
+  .tw-min-h-screen canvas {
+    max-width: 100%;
+  }
+
+  .study-icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--dt-text-soft);
+    line-height: 1;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  }
+
+  .study-icon-button:hover {
+    border-color: rgba(220, 38, 38, 0.35);
+    background-color: var(--dt-soft-red);
+    color: #ef4444;
+  }
+
+  .study-icon-button-circle {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 9999px;
+  }
+
+  .study-icon-button-square {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 8px;
+  }
+
+  .study-play-button {
+    display: inline-flex;
+    width: 2rem;
+    height: 2rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(96, 165, 250, 0.35);
+    border-radius: 9999px;
+    background-color: var(--dt-blue);
+    color: #ffffff;
+    line-height: 1;
+    transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+  }
+
+  .study-play-button:hover {
+    border-color: rgba(96, 165, 250, 0.65);
+    background-color: var(--dt-blue-strong);
+    color: #ffffff;
+  }
+
+  .study-play-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  @media (min-width: 640px) {
+    .sm\:tw-px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+    .sm\:tw-w-auto { width: auto; }
+    .sm\:tw-flex-row { flex-direction: row; }
+    .sm\:tw-items-end { align-items: flex-end; }
+    .sm\:tw-items-start { align-items: flex-start; }
+    .sm\:tw-justify-between { justify-content: space-between; }
+    .sm\:tw-grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+
+  @media (min-width: 1024px) {
+    .lg\:tw-px-8 { padding-left: 2rem; padding-right: 2rem; }
+    .lg\:tw-flex-row { flex-direction: row; }
+    .lg\:tw-items-end { align-items: flex-end; }
+    .lg\:tw-justify-between { justify-content: space-between; }
+  }
+
+  @media (min-width: 1280px) {
+    .xl\:tw-grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .xl\:tw-grid-cols-12 { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+    .xl\:tw-col-span-8 { grid-column: span 8 / span 8; }
+    .xl\:tw-col-span-7 { grid-column: span 7 / span 7; }
+    .xl\:tw-col-span-5 { grid-column: span 5 / span 5; }
+    .xl\:tw-col-span-4 { grid-column: span 4 / span 4; }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container">
-
-  {% if messages %}
-    {% for message in messages %}
-      <div class="alert alert-{{ message.tags }} alert-dismissible fade show mt-3" role="alert">
-        {{ message }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+<div x-data="dashboardTimer()" class="study-dashboard tw-min-h-screen tw-bg-slate-50 tw-py-8 tw-text-slate-950">
+  <div class="tw-mx-auto tw-max-w-screen-2xl tw-space-y-8 tw-px-4 sm:tw-px-6 lg:tw-px-8">
+    {% if messages %}
+      <div class="tw-space-y-3">
+        {% for message in messages %}
+          <div class="tw-rounded-xl tw-border tw-border-blue-100 tw-bg-blue-50 tw-px-4 tw-py-3 tw-text-sm tw-text-blue-800">
+            {{ message }}
+          </div>
+        {% endfor %}
       </div>
-    {% endfor %}
-  {% endif %}
+    {% endif %}
 
-  <div class="card mb-4">
-    <div class="card-body">
-      <h5 class="card-title"><i class="bi bi-calendar-check"></i> Marcar Dia de Estudo</h5>
-      <form method="post" class="row g-3 mt-2">
+    <section class="tw-flex tw-flex-col tw-gap-4 lg:tw-flex-row lg:tw-items-end lg:tw-justify-between">
+      <div>
+        <p class="tw-text-sm tw-font-medium tw-text-blue-600">Daily Task</p>
+        <h1 class="tw-mt-2 tw-text-3xl tw-font-semibold tw-tracking-tight tw-text-slate-950">Dashboard de Estudos</h1>
+        <p class="tw-mt-2 tw-max-w-2xl tw-text-sm tw-text-slate-500">Acompanhe constância, tempo líquido e próximos focos em uma visão limpa.</p>
+      </div>
+      <form method="post" class="tw-flex tw-w-full tw-flex-col tw-gap-3 tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-3 tw-shadow-soft sm:tw-w-auto sm:tw-flex-row sm:tw-items-end">
         {% csrf_token %}
-        <div class="col-md-4">
-          <label for="date" class="form-label">Data</label>
-          <input type="date" class="form-control" id="date" name="date" value="{{ today }}" max="{{ today }}" required>
+        <div class="tw-flex tw-flex-col tw-gap-1">
+          <label for="date" class="tw-text-xs tw-font-medium tw-text-slate-500">Data</label>
+          <input type="date" id="date" name="date" value="{{ today }}" max="{{ today }}" required class="tw-h-10 tw-rounded-lg tw-border tw-border-slate-200 tw-bg-white tw-px-3 tw-text-sm tw-text-slate-900 tw-outline-none focus:tw-border-blue-500 focus:tw-ring-2 focus:tw-ring-blue-100">
         </div>
-        <div class="col-md-2 align-self-end">
-          <button type="submit" class="btn btn-primary w-100">
-            <i class="bi bi-check2-circle"></i> Marcar
-          </button>
-        </div>
+        <button type="submit" class="tw-inline-flex tw-h-10 tw-items-center tw-justify-center tw-gap-2 tw-rounded-lg tw-bg-blue-600 tw-px-4 tw-text-sm tw-font-medium tw-text-white tw-shadow-sm hover:tw-bg-blue-700">
+          <i class="bi bi-check2-circle"></i>
+          Marcar dia
+        </button>
       </form>
-    </div>
-  </div>
+    </section>
 
-  <div class="row mb-4">
-    <!-- Card Ofensiva -->
-    <div class="col-md-4 mb-3 mb-md-0">
-      <div class="card h-100 border-0 shadow-sm rounded-4">
-        <div class="card-body d-flex align-items-center">
-          <div class="flex-shrink-0 bg-warning bg-opacity-10 p-3 rounded-circle text-warning">
-            <i class="bi bi-fire fs-3"></i>
-          </div>
-          <div class="ms-3">
-            <h6 class="text-muted mb-1">Ofensiva Atual</h6>
-            <h3 class="mb-0 fw-bold">{{ current_streak }} <span class="fs-6 fw-normal text-muted">dias</span></h3>
-            <small class="text-muted">Melhor ofensiva: {{ best_streak }} dias</small>
-          </div>
+    <section class="tw-grid tw-grid-cols-1 tw-gap-4 sm:tw-grid-cols-2 xl:tw-grid-cols-4">
+      <article class="tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-5 tw-shadow-soft">
+        <div class="tw-flex tw-items-center tw-justify-between">
+          <span class="tw-text-sm tw-font-medium tw-text-slate-500">Horas da semana</span>
+          <span class="tw-rounded-full tw-bg-blue-50 tw-px-2.5 tw-py-1 tw-text-xs tw-font-medium tw-text-blue-700">líquidas</span>
         </div>
-      </div>
-    </div>
+        <p class="tw-mt-4 tw-text-3xl tw-font-semibold tw-text-slate-950">{{ weekly_net_time_total_label|default:"0min" }}</p>
+        <p class="tw-mt-1 tw-text-sm tw-text-slate-500">Total descontando pausas</p>
+      </article>
+      <article class="tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-5 tw-shadow-soft">
+        <div class="tw-flex tw-items-center tw-justify-between">
+          <span class="tw-text-sm tw-font-medium tw-text-slate-500">Hoje</span>
+          <i class="bi bi-hourglass-split tw-text-blue-600"></i>
+        </div>
+        <p class="tw-mt-4 tw-text-3xl tw-font-semibold tw-text-slate-950">{{ weekly_net_time_today_label|default:"0min" }}</p>
+        <p class="tw-mt-1 tw-text-sm tw-text-slate-500">Tempo líquido registrado</p>
+      </article>
+      <article class="tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-5 tw-shadow-soft">
+        <div class="tw-flex tw-items-center tw-justify-between">
+          <span class="tw-text-sm tw-font-medium tw-text-slate-500">Streak atual</span>
+          <i class="bi bi-fire tw-text-blue-600"></i>
+        </div>
+        <p class="tw-mt-4 tw-text-3xl tw-font-semibold tw-text-slate-950">{{ current_streak }} dias</p>
+        <p class="tw-mt-1 tw-text-sm tw-text-slate-500">Melhor sequência: {{ best_streak }} dias</p>
+      </article>
+      <article class="tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-5 tw-shadow-soft">
+        <div class="tw-flex tw-items-center tw-justify-between">
+          <span class="tw-text-sm tw-font-medium tw-text-slate-500">Meta semanal</span>
+          <span class="tw-text-sm tw-font-medium tw-text-blue-700">{{ goal_percentage }}%</span>
+        </div>
+        <p class="tw-mt-4 tw-text-3xl tw-font-semibold tw-text-slate-950">{{ days_studied_this_week }}/{{ weekly_goal }}</p>
+        <div class="tw-mt-4 tw-h-2 tw-rounded-full tw-bg-slate-100">
+          <div class="tw-h-2 tw-rounded-full tw-bg-blue-600" style="width: {{ goal_percentage }}%;"></div>
+        </div>
+      </article>
+    </section>
 
-    <!-- Card Meta Semanal -->
-    <div class="col-md-8">
-      <div class="card h-100 border-0 shadow-sm rounded-4">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <h6 class="text-muted mb-0"><i class="bi bi-bullseye text-primary me-2"></i>Meta Semanal</h6>
-            <span class="badge bg-primary rounded-pill">{{ days_studied_this_week }} / {{ weekly_goal }} dias</span>
+    <section>
+      <article class="tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-6 tw-shadow-soft">
+        <div class="tw-flex tw-flex-col tw-gap-3 sm:tw-flex-row sm:tw-items-start sm:tw-justify-between">
+          <div>
+            <p class="tw-text-sm tw-font-medium tw-text-blue-600">IA</p>
+            <h2 class="tw-mt-1 tw-text-lg tw-font-semibold tw-text-slate-950">Insight da semana</h2>
+            {% if latest_insight %}
+              <p class="tw-mt-1 tw-text-sm tw-text-slate-500">{{ latest_insight.week_start|date:"d/m" }} - {{ latest_insight.week_end|date:"d/m" }}</p>
+            {% else %}
+              <p class="tw-mt-1 tw-text-sm tw-text-slate-500">Gere os insights para receber uma leitura objetiva da sua semana.</p>
+            {% endif %}
           </div>
-          <div class="progress" style="height: 12px; border-radius: 10px;">
-            <div class="progress-bar bg-success progress-bar-striped progress-bar-animated"
-                 role="progressbar"
-                 style="width: {{ goal_percentage }}%;"
-                 aria-valuenow="{{ goal_percentage }}"
-                 aria-valuemin="0"
-                 aria-valuemax="100">
+          <span class="tw-rounded-full tw-bg-blue-50 tw-px-3 tw-py-1 tw-text-xs tw-font-medium tw-text-blue-700">IA</span>
+        </div>
+
+        {% if latest_insight %}
+          <div class="tw-mt-5 tw-grid tw-grid-cols-1 tw-gap-4 xl:tw-grid-cols-4">
+            <div class="tw-rounded-lg tw-bg-slate-100 tw-p-4">
+              <p class="tw-text-xs tw-font-medium tw-text-blue-600">Resumo</p>
+              <p class="tw-mt-2 tw-text-sm tw-text-slate-500">{{ latest_insight.summary }}</p>
+            </div>
+            <div class="tw-rounded-lg tw-bg-slate-100 tw-p-4">
+              <p class="tw-text-xs tw-font-medium tw-text-blue-600">Pontos fortes</p>
+              <p class="tw-mt-2 tw-text-sm tw-text-slate-500">{{ latest_insight.strengths|default:"Sem pontos fortes registrados ainda." }}</p>
+            </div>
+            <div class="tw-rounded-lg tw-bg-slate-100 tw-p-4">
+              <p class="tw-text-xs tw-font-medium tw-text-blue-600">Atenção</p>
+              <p class="tw-mt-2 tw-text-sm tw-text-slate-500">{{ latest_insight.risks|default:"Sem riscos registrados ainda." }}</p>
+            </div>
+            <div class="tw-rounded-lg tw-bg-slate-100 tw-p-4">
+              <p class="tw-text-xs tw-font-medium tw-text-blue-600">Próximos passos</p>
+              <p class="tw-mt-2 tw-text-sm tw-text-slate-500">{{ latest_insight.next_actions|default:"Sem próximos passos registrados ainda." }}</p>
             </div>
           </div>
-          <small class="text-muted d-block mt-2 text-end">{{ goal_percentage }}% concluído</small>
-        </div>
-      </div>
-    </div>
-  </div>
+        {% endif %}
+      </article>
+    </section>
 
-  <div class="row">
-    <div class="col-md-7 mb-4">
-      <div class="card h-100">
-        <div class="card-body">
-          <h5 class="card-title"><i class="bi bi-bar-chart-line"></i> Frequência Semanal</h5>
-          <canvas id="weeklyChart"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-5 mb-4">
-      <div class="card h-100">
-        <div class="card-body">
-          <h5 class="card-title"><i class="bi bi-calendar3"></i> Calendário</h5>
-
-          <form method="get" class="mb-3 d-flex align-items-end gap-2">
-            <input type="hidden" name="start_year" value="{{ start_year }}">
-            <input type="hidden" name="end_year" value="{{ end_year }}">
-
+    <section class="tw-grid tw-grid-cols-1 tw-gap-6 xl:tw-grid-cols-12">
+      <div class="tw-space-y-6 xl:tw-col-span-7">
+        <article class="tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-6 tw-shadow-soft">
+          <div class="tw-flex tw-flex-col tw-gap-2 sm:tw-flex-row sm:tw-items-start sm:tw-justify-between">
             <div>
-              <label for="month" class="form-label">Mês</label>
-              <select class="form-select" name="month" id="month">
-                {% for i in months %}
-                  <option value="{{ i }}" {% if i == selected_month %}selected{% endif %}>{{ i }}</option>
+              <h2 class="tw-text-lg tw-font-semibold tw-text-slate-950">Progresso semanal</h2>
+              <p class="tw-mt-1 tw-text-sm tw-text-slate-500">Horas líquidas por dia</p>
+            </div>
+            <span class="tw-rounded-full tw-bg-slate-100 tw-px-3 tw-py-1 tw-text-xs tw-font-medium tw-text-slate-600">7 dias</span>
+          </div>
+          <div class="tw-mt-6 tw-h-80">
+            <canvas id="weeklyChart"></canvas>
+          </div>
+        </article>
+
+        <article class="tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-6 tw-shadow-soft">
+          <div class="tw-flex tw-flex-col tw-gap-2 sm:tw-flex-row sm:tw-items-start sm:tw-justify-between">
+            <div>
+              <h2 class="tw-text-lg tw-font-semibold tw-text-slate-950">Tendência mensal</h2>
+              <p class="tw-mt-1 tw-text-sm tw-text-slate-500">Histórico de dias estudados no intervalo</p>
+            </div>
+            <form method="get" class="tw-flex tw-flex-wrap tw-gap-2">
+              <input type="hidden" name="month" value="{{ selected_month }}">
+              <input type="hidden" name="year" value="{{ selected_year }}">
+              <input type="number" name="start_year" value="{{ start_year }}" class="tw-h-9 tw-w-24 tw-rounded-lg tw-border tw-border-slate-200 tw-px-3 tw-text-sm tw-outline-none focus:tw-border-blue-500">
+              <input type="number" name="end_year" value="{{ end_year }}" class="tw-h-9 tw-w-24 tw-rounded-lg tw-border tw-border-slate-200 tw-px-3 tw-text-sm tw-outline-none focus:tw-border-blue-500">
+              <button type="submit" class="tw-h-9 tw-rounded-lg tw-bg-slate-900 tw-px-4 tw-text-sm tw-font-medium tw-text-white hover:tw-bg-slate-800">Aplicar</button>
+            </form>
+          </div>
+          <div class="tw-mt-6 tw-h-72">
+            <canvas id="monthlyChart"></canvas>
+          </div>
+        </article>
+      </div>
+
+      <aside class="tw-space-y-6 xl:tw-col-span-5">
+        <article class="tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-6 tw-shadow-soft">
+          <div class="tw-flex tw-items-center tw-justify-between">
+            <div>
+              <h2 class="tw-text-lg tw-font-semibold tw-text-slate-950">Meus Estudos</h2>
+              <p class="tw-mt-1 tw-text-sm tw-text-slate-500">Matérias, tópicos e início rápido</p>
+            </div>
+            <div class="tw-flex tw-gap-2">
+              <button type="button" class="tw-inline-flex tw-h-9 tw-items-center tw-justify-center tw-rounded-lg tw-border tw-border-slate-200 tw-bg-white tw-px-3 tw-text-sm tw-font-medium tw-text-slate-700 hover:tw-bg-slate-50" data-bs-toggle="modal" data-bs-target="#createSubjectModal">
+                <i class="bi bi-plus-lg"></i>
+              </button>
+              <button type="button" class="tw-inline-flex tw-h-9 tw-items-center tw-justify-center tw-rounded-lg tw-bg-blue-600 tw-px-3 tw-text-sm tw-font-medium tw-text-white hover:tw-bg-blue-700" data-bs-toggle="modal" data-bs-target="#createTopicModal">
+                <i class="bi bi-plus-lg"></i>
+              </button>
+            </div>
+          </div>
+          {% if active_session %}
+            <div class="tw-mt-4 tw-rounded-xl tw-border tw-border-blue-100 tw-bg-blue-50 tw-px-3 tw-py-2 tw-text-sm tw-text-blue-800">
+              Finalize {{ active_session.topic.name }} antes de iniciar outra sessão.
+            </div>
+          {% endif %}
+          <div class="tw-mt-5 tw-space-y-3">
+            {% if subjects %}
+              {% for subject in subjects %}
+                <div class="tw-rounded-xl tw-border tw-border-slate-200 tw-bg-slate-50">
+                  <div class="tw-flex tw-items-center tw-justify-between tw-gap-3 tw-border-b tw-border-slate-200 tw-px-4 tw-py-3">
+                    <div class="tw-flex tw-items-center tw-gap-2 tw-min-w-0">
+                      <span class="tw-h-2.5 tw-w-2.5 tw-shrink-0 tw-rounded-full" style="background-color: {{ subject.color }};"></span>
+                      <span class="tw-truncate tw-text-sm tw-font-medium tw-text-slate-900">{{ subject.name }}</span>
+                    </div>
+                    <form method="post" action="{% url 'delete_subject' subject.id %}">
+                      {% csrf_token %}
+                      <button type="submit" class="study-icon-button study-icon-button-square" title="Excluir matéria" aria-label="Excluir Matéria">
+                        <i class="bi bi-trash"></i>
+                        <span class="tw-sr-only">Excluir Matéria</span>
+                      </button>
+                    </form>
+                  </div>
+                  <div class="tw-divide-y tw-divide-slate-200">
+                    {% for topic in subject.topics.all %}
+                      <div class="tw-flex tw-items-center tw-justify-between tw-gap-3 tw-px-4 tw-py-3">
+                        <span class="tw-truncate tw-text-sm tw-text-slate-600">{{ topic.name }}</span>
+                        <div class="tw-flex tw-shrink-0 tw-items-center tw-gap-2">
+                          <form method="post" action="{% url 'delete_topic' topic.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="study-icon-button study-icon-button-circle" title="Excluir tópico" aria-label="Excluir Tópico">
+                              <i class="bi bi-trash"></i>
+                              <span class="tw-sr-only">Excluir Tópico</span>
+                            </button>
+                          </form>
+                          <button class="study-play-button" @click="openStartSession({{ topic.id }})" title="Iniciar estudo" :disabled="loading || {{ active_session|yesno:'true,false' }}">
+                            <i class="bi bi-play-fill"></i>
+                          </button>
+                        </div>
+                      </div>
+                    {% empty %}
+                      <p class="tw-px-4 tw-py-3 tw-text-sm tw-text-slate-500">Nenhum tópico cadastrado.</p>
+                    {% endfor %}
+                  </div>
+                </div>
+              {% endfor %}
+            {% else %}
+              <p class="tw-rounded-xl tw-border tw-border-dashed tw-border-slate-300 tw-p-4 tw-text-sm tw-text-slate-500">Nenhuma matéria cadastrada.</p>
+            {% endif %}
+          </div>
+        </article>
+
+        <article class="tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-6 tw-shadow-soft">
+          <h2 class="tw-text-lg tw-font-semibold tw-text-slate-950">Tópicos para revisar</h2>
+          <div class="tw-mt-4 tw-flex tw-flex-wrap tw-gap-2">
+            {% if delayed_topics %}
+              {% for topic in delayed_topics %}
+                <span class="tw-rounded-full tw-bg-amber-50 tw-px-3 tw-py-1 tw-text-xs tw-font-medium tw-text-amber-700">{{ topic.subject.name }} · {{ topic.name }}</span>
+              {% endfor %}
+            {% else %}
+              <span class="tw-text-sm tw-text-slate-500">Nenhum tópico atrasado.</span>
+            {% endif %}
+          </div>
+        </article>
+
+        <article class="tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-6 tw-shadow-soft">
+          <div class="tw-flex tw-flex-col tw-gap-3 sm:tw-flex-row sm:tw-items-start sm:tw-justify-between">
+            <div>
+              <h2 class="tw-text-lg tw-font-semibold tw-text-slate-950">Calendário</h2>
+              <p class="tw-mt-1 tw-text-sm tw-text-slate-500">{{ total_studied }} de {{ total_days }} dias estudados</p>
+            </div>
+            <form method="get" class="tw-flex tw-flex-wrap tw-gap-2">
+              <input type="hidden" name="start_year" value="{{ start_year }}">
+              <input type="hidden" name="end_year" value="{{ end_year }}">
+              <select name="month" class="tw-h-9 tw-rounded-lg tw-border tw-border-slate-200 tw-px-3 tw-text-sm tw-outline-none focus:tw-border-blue-500">
+                {% for month in months %}
+                  <option value="{{ month }}" {% if month == selected_month %}selected{% endif %}>{{ month }}</option>
                 {% endfor %}
               </select>
-            </div>
-            <div>
-              <label for="year" class="form-label">Ano</label>
-              <select class="form-select" name="year" id="year">
-                {% for y in years %}
-                  <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+              <select name="year" class="tw-h-9 tw-rounded-lg tw-border tw-border-slate-200 tw-px-3 tw-text-sm tw-outline-none focus:tw-border-blue-500">
+                {% for year in years %}
+                  <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
                 {% endfor %}
               </select>
-            </div>
-            <div>
-              <button type="submit" class="btn btn-secondary">Filtrar</button>
-            </div>
-          </form>
-
-          <p class="small mb-3">{{ total_studied }} de {{ total_days }} dias estudados</p>
-
-          <div class="d-grid calendar-grid" style="grid-template-columns: repeat(7, 1fr); gap: 5px;">
+              <button type="submit" class="tw-h-9 tw-rounded-lg tw-bg-blue-600 tw-px-3 tw-text-sm tw-font-medium tw-text-white hover:tw-bg-blue-700">Filtrar</button>
+            </form>
+          </div>
+          <div class="tw-mt-4 tw-grid tw-grid-cols-7 tw-gap-2">
+            <div class="tw-text-xs tw-font-medium tw-text-slate-500">Dom</div>
+            <div class="tw-text-xs tw-font-medium tw-text-slate-500">Seg</div>
+            <div class="tw-text-xs tw-font-medium tw-text-slate-500">Ter</div>
+            <div class="tw-text-xs tw-font-medium tw-text-slate-500">Qua</div>
+            <div class="tw-text-xs tw-font-medium tw-text-slate-500">Qui</div>
+            <div class="tw-text-xs tw-font-medium tw-text-slate-500">Sex</div>
+            <div class="tw-text-xs tw-font-medium tw-text-slate-500">Sáb</div>
             {% for item in calendar_days %}
-              <div class="text-center p-1 rounded small {% if item.studied %}bg-primary text-white{% else %}border{% endif %}">
-                {{ item.day.day }}
-              </div>
+              {% if item.day %}
+                <div class="tw-flex tw-h-9 tw-items-center tw-justify-center tw-rounded-lg tw-text-xs tw-font-medium {% if item.studied %}tw-bg-blue-600 tw-text-white{% else %}tw-bg-slate-100 tw-text-slate-400{% endif %}" title="{{ item.day|date:'d/m/Y' }}">
+                  {{ item.day.day }}
+                </div>
+              {% else %}
+                <div class="tw-h-9"></div>
+              {% endif %}
             {% endfor %}
           </div>
+        </article>
+      </aside>
+    </section>
+  </div>
+
+  <div class="modal fade" id="createSubjectModal" tabindex="-1" aria-labelledby="createSubjectModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form method="post" action="{% url 'create_subject' %}">
+          {% csrf_token %}
+          <div class="modal-header">
+            <h5 class="modal-title" id="createSubjectModalLabel">Nova Matéria</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            {{ subject_form.as_p }}
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="createTopicModal" tabindex="-1" aria-labelledby="createTopicModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form method="post" action="{% url 'create_topic' %}">
+          {% csrf_token %}
+          <div class="modal-header">
+            <h5 class="modal-title" id="createTopicModalLabel">Novo Tópico</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            {{ topic_form.as_p }}
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="startSessionModal" tabindex="-1" aria-labelledby="startSessionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="startSessionModalLabel">Objetivo da sessão</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <label for="objectiveText" class="form-label">O que você quer aprender agora?</label>
+          <textarea id="objectiveText" class="form-control" rows="4" x-model="objectiveText" required></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary" @click="startSession()" :disabled="loading">Iniciar</button>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="card mb-4">
-    <div class="card-body">
-      <h5 class="card-title"><i class="bi bi-bar-chart"></i> Estudos por Mês</h5>
-      <form method="get" class="row g-2 align-items-end">
-        <input type="hidden" name="month" value="{{ selected_month }}">
-        <input type="hidden" name="year" value="{{ selected_year }}">
-
-        <div class="col-md-2">
-          <label for="start_year" class="form-label">Ano inicial</label>
-          <input type="number" class="form-control" name="start_year" id="start_year" value="{{ start_year }}">
-        </div>
-        <div class="col-md-2">
-          <label for="end_year" class="form-label">Ano final</label>
-          <input type="number" class="form-control" name="end_year" id="end_year" value="{{ end_year }}">
-        </div>
-        <div class="col-md-2">
-          <button type="submit" class="btn btn-secondary w-100">Aplicar</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <div class="card mb-4">
-    <div class="card-body">
-      <canvas id="monthlyChart"></canvas>
-    </div>
-  </div>
-
+  {{ weekly_net_time_labels|json_script:"weekly-net-time-labels-data" }}
+  {{ weekly_net_time_values|json_script:"weekly-net-time-values-data" }}
+  {{ monthly_labels|json_script:"monthly-labels-data" }}
+  {{ monthly_values|json_script:"monthly-values-data" }}
 </div>
-
-{{ weekly_labels|json_script:"weekly-labels-data" }}
-{{ weekly_values|json_script:"weekly-values-data" }}
-{{ monthly_labels|json_script:"monthly-labels-data" }}
-{{ monthly_values|json_script:"monthly-values-data" }}
-
 {% endblock %}
 
 {% block scripts %}
@@ -166,81 +602,164 @@
 <script>
   let weeklyChart, monthlyChart;
 
-  function updateChartColors() {
-    const style = getComputedStyle(document.body);
-    const textColor = style.getPropertyValue('--bs-body-color');
-    const gridColor = style.getPropertyValue('--bs-border-color');
+  function getDashboardColor(name) {
+    const dashboard = document.querySelector('.study-dashboard');
+    return getComputedStyle(dashboard).getPropertyValue(name).trim();
+  }
 
-    Chart.defaults.color = textColor;
-    Chart.defaults.borderColor = gridColor;
+  function updateDashboardChartColors() {
+    const mutedText = getDashboardColor('--dt-text-muted');
+    const border = getDashboardColor('--dt-border');
+    const blue = getDashboardColor('--dt-blue');
+
+    Chart.defaults.color = mutedText;
+    Chart.defaults.borderColor = border;
+
+    if (weeklyChart) {
+      weeklyChart.data.datasets[0].backgroundColor = blue;
+      weeklyChart.data.datasets[0].borderColor = blue;
+      weeklyChart.options.scales.y.grid.color = border;
+      weeklyChart.options.scales.x.ticks.color = mutedText;
+      weeklyChart.options.scales.y.ticks.color = mutedText;
+    }
+
+    if (monthlyChart) {
+      monthlyChart.data.datasets[0].borderColor = blue;
+      monthlyChart.data.datasets[0].backgroundColor = `${blue}22`;
+      monthlyChart.options.scales.y.grid.color = border;
+      monthlyChart.options.scales.x.ticks.color = mutedText;
+      monthlyChart.options.scales.y.ticks.color = mutedText;
+    }
 
     if (weeklyChart) weeklyChart.update();
     if (monthlyChart) monthlyChart.update();
   }
 
   document.addEventListener('DOMContentLoaded', function () {
-    const weeklyLabels = JSON.parse(document.getElementById('weekly-labels-data').textContent);
-    const weeklyValues = JSON.parse(document.getElementById('weekly-values-data').textContent);
+    const weeklyLabels = JSON.parse(document.getElementById('weekly-net-time-labels-data').textContent);
+    const weeklyValues = JSON.parse(document.getElementById('weekly-net-time-values-data').textContent);
     const monthlyLabels = JSON.parse(document.getElementById('monthly-labels-data').textContent);
     const monthlyValues = JSON.parse(document.getElementById('monthly-values-data').textContent);
 
-    const weeklyCtx = document.getElementById('weeklyChart').getContext('2d');
-    weeklyChart = new Chart(weeklyCtx, {
+    weeklyChart = new Chart(document.getElementById('weeklyChart').getContext('2d'), {
       type: 'bar',
       data: {
         labels: weeklyLabels,
         datasets: [{
-          label: 'Dias Estudados',
+          label: 'Horas líquidas',
           data: weeklyValues,
-          backgroundColor: 'rgba(54, 162, 235, 0.6)',
-          borderColor: 'rgba(54, 162, 235, 1)',
+          backgroundColor: '#2563eb',
+          borderColor: '#2563eb',
+          borderRadius: 8,
           borderWidth: 1
         }]
       },
       options: {
-        aspectRatio: 3,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
         scales: {
-          y: {
-            beginAtZero: true,
-            ticks: { stepSize: 1 }
-          }
+          x: { grid: { display: false }, ticks: {} },
+          y: { beginAtZero: true, grid: {}, ticks: { stepSize: 1 } }
         }
       }
     });
 
-    const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
-    monthlyChart = new Chart(monthlyCtx, {
+    monthlyChart = new Chart(document.getElementById('monthlyChart').getContext('2d'), {
       type: 'line',
       data: {
         labels: monthlyLabels,
         datasets: [{
-          label: 'Dias Estudados por Mês',
+          label: 'Dias estudados',
           data: monthlyValues,
-          backgroundColor: 'rgba(255, 193, 7, 0.6)',
-          borderColor: 'rgba(255, 193, 7, 1)',
+          backgroundColor: '#2563eb22',
+          borderColor: '#2563eb',
           borderWidth: 2,
           fill: true,
-          tension: 0.1
+          tension: 0.35,
+          pointRadius: 3
         }]
       },
       options: {
-        aspectRatio: 3,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
         scales: {
-          y: {
-            beginAtZero: true,
-            ticks: { stepSize: 1 }
-          }
+          x: { grid: { display: false }, ticks: {} },
+          y: { beginAtZero: true, grid: {}, ticks: { stepSize: 1 } }
         }
       }
     });
 
-    updateChartColors();
+    updateDashboardChartColors();
+  });
 
-    document.querySelectorAll('[data-bs-theme-value]').forEach(toggle => {
-      toggle.addEventListener('click', () => {
-        setTimeout(updateChartColors, 50);
-      });
-    });
+  window.addEventListener('study-task-theme-change', () => {
+    window.setTimeout(updateDashboardChartColors, 0);
+  });
+
+  document.addEventListener('alpine:init', () => {
+    Alpine.data('dashboardTimer', () => ({
+        loading: false,
+        selectedTopicId: null,
+        objectiveText: '',
+
+        getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        },
+
+        openStartSession(topicId) {
+            this.selectedTopicId = topicId;
+            this.objectiveText = '';
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('startSessionModal')).show();
+        },
+
+        async startSession() {
+            this.loading = true;
+            const formData = new FormData();
+            formData.append('topic_id', this.selectedTopicId);
+            formData.append('objective_text', this.objectiveText);
+            try {
+                const response = await fetch("{% url 'start_session' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': this.getCookie('csrftoken')
+                    },
+                    body: formData
+                });
+
+                if (response.ok) {
+                    bootstrap.Modal.getOrCreateInstance(document.getElementById('startSessionModal')).hide();
+                    htmx.ajax('GET', "{% url 'timer_widget' %}", {target: '#global-timer-container', swap: 'innerHTML'});
+                } else {
+                    const data = await response.json();
+                    if (data.code === 'ActiveSessionExistsError') {
+                        bootstrap.Modal.getOrCreateInstance(document.getElementById('startSessionModal')).hide();
+                        htmx.ajax('GET', "{% url 'timer_widget' %}", {target: '#global-timer-container', swap: 'innerHTML'});
+                    }
+                    alert(data.error || "Erro ao iniciar a sessão.");
+                }
+            } catch (error) {
+                console.error("Erro na comunicação com o backend:", error);
+                alert("Erro ao iniciar a sessão.");
+            } finally {
+                this.loading = false;
+            }
+        }
+    }));
   });
 </script>
 {% endblock %}

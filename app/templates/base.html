@@ -15,8 +15,15 @@
     <script src="https://unpkg.com/htmx.org@1.9.11"></script>
 
     <script>
-        const setTheme = (theme) => {
-            document.documentElement.setAttribute('data-bs-theme', theme);
+        const resolveTheme = (theme) => {
+            if (theme === 'auto') {
+                return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+            return theme;
+        };
+
+        window.studyTaskSetTheme = (theme) => {
+            document.documentElement.setAttribute('data-bs-theme', resolveTheme(theme));
             localStorage.setItem('theme', theme);
         };
 
@@ -25,15 +32,36 @@
             if (storedTheme) {
                 return storedTheme;
             }
-            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            return 'light';
         };
 
-        setTheme(getPreferredTheme());
+        window.studyTaskSetTheme(getPreferredTheme());
     </script>
 
     <style>
       body {
         font-family: 'Poppins', sans-serif;
+      }
+
+      [data-bs-theme="dark"] body,
+      [data-bs-theme="dark"] .study-navbar,
+      [data-bs-theme="dark"] .study-footer {
+        background-color: #0f172a !important;
+      }
+
+      [data-bs-theme="dark"] .study-navbar,
+      [data-bs-theme="dark"] .study-footer {
+        border-color: #334155 !important;
+      }
+
+      [data-bs-theme="dark"] .study-navbar .btn-outline-secondary {
+        --bs-btn-color: #94a3b8;
+        --bs-btn-border-color: #475569;
+        --bs-btn-hover-color: #e2e8f0;
+        --bs-btn-hover-bg: #1e293b;
+        --bs-btn-hover-border-color: #64748b;
+        --bs-btn-active-bg: #1e293b;
+        --bs-btn-active-border-color: #64748b;
       }
     </style>
 
@@ -48,13 +76,126 @@
         {% block content %}{% endblock %}
     </main>
 
-    <footer class="footer mt-auto py-3 bg-body-tertiary border-top">
+    <footer class="study-footer footer mt-auto py-3 bg-body-tertiary border-top">
         <div class="container text-center">
             <span class="text-body-secondary">© {% now "Y" %} Daily Task. Todos os direitos reservados.</span>
         </div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        window.studyTaskGetCookie = function (name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        };
+
+        window.timerWidget = function (initialSeconds, initialStatus) {
+            return {
+                seconds: initialSeconds,
+                status: initialStatus,
+                loading: false,
+                intervalId: null,
+                objectiveAchieved: 'YES',
+                objectiveResult: '',
+                learningNote: '',
+                nextStep: '',
+
+                init() {
+                    if (this.status === 'IN_PROGRESS') {
+                        this.startTick();
+                    }
+                },
+
+                startTick() {
+                    this.intervalId = setInterval(() => {
+                        this.seconds++;
+                    }, 1000);
+                },
+
+                stopTick() {
+                    if (this.intervalId) {
+                        clearInterval(this.intervalId);
+                        this.intervalId = null;
+                    }
+                },
+
+                get formattedTime() {
+                    const hrs = Math.floor(this.seconds / 3600);
+                    const mins = Math.floor((this.seconds % 3600) / 60);
+                    const secs = this.seconds % 60;
+                    return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                },
+
+                async sendAction(url, payload = {}) {
+                    this.loading = true;
+                    const formData = new FormData();
+                    Object.entries(payload).forEach(([key, value]) => {
+                        formData.append(key, value);
+                    });
+                    try {
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': window.studyTaskGetCookie('csrftoken')
+                            },
+                            body: formData
+                        });
+                        if (response.ok) {
+                            htmx.ajax('GET', "{% url 'timer_widget' %}", {target: '#global-timer-container', swap: 'innerHTML'});
+                        } else {
+                            const data = await response.json();
+                            alert(data.error || "Erro ao atualizar a sessão.");
+                        }
+                    } catch (error) {
+                        console.error("Erro na comunicação com o backend:", error);
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                pauseSession() {
+                    this.stopTick();
+                    this.sendAction("{% url 'pause_session' %}");
+                },
+
+                resumeSession() {
+                    this.sendAction("{% url 'resume_session' %}");
+                },
+
+                stopSession() {
+                    this.stopTick();
+                    bootstrap.Modal.getOrCreateInstance(document.getElementById('stopSessionModal')).show();
+                },
+
+                finishSession() {
+                    this.stopTick();
+                    bootstrap.Modal.getOrCreateInstance(document.getElementById('stopSessionModal')).hide();
+                    this.sendAction("{% url 'stop_session' %}", {
+                        objective_achieved: this.objectiveAchieved,
+                        objective_result: this.objectiveResult,
+                        learning_note: this.learningNote,
+                        next_step: this.nextStep
+                    });
+                }
+            };
+        };
+
+        document.body.addEventListener('htmx:afterSwap', function (event) {
+            if (window.Alpine) {
+                window.Alpine.initTree(event.detail.target);
+            }
+        });
+    </script>
     {% block scripts %}{% endblock %}
 
     {% if user.is_authenticated %}

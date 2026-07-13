@@ -6,7 +6,7 @@ from django.db.models import DurationField, ExpressionWrapper, F, Max, Prefetch,
 from django.db.models.functions import TruncDate
 from django.utils import timezone
 
-from .models import SessionPause, StudySession, Subject, TaskDay, Topic
+from .models import SessionPause, StudyInsight, StudySession, Subject, TaskDay, Topic
 
 
 def format_duration_hours(value):
@@ -167,6 +167,10 @@ def get_delayed_topics(user):
     )
 
 
+def get_latest_insight(user):
+    return StudyInsight.objects.filter(user=user).first()
+
+
 def get_active_subjects_with_topics(user):
     active_topics = Topic.objects.filter(is_active=True)
     return Subject.objects.filter(user=user, is_active=True).prefetch_related(
@@ -190,6 +194,7 @@ def get_study_dashboard_context(user, request):
     context.update(get_weekly_goal_data(user))
     context.update(get_weekly_net_time(user))
     context["delayed_topics"] = get_delayed_topics(user)
+    context["latest_insight"] = get_latest_insight(user)
     context["subjects"] = get_active_subjects_with_topics(user)
     context["active_session"] = get_active_study_session(user)
     context["today"] = timezone.localdate().isoformat()
