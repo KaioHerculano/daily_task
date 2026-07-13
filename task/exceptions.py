@@ -12,3 +12,11 @@ class SessionNotActiveError(TimerPersistenceError):
 
 class InvalidStateTransitionError(TimerPersistenceError):
     pass
+
+
+class InvalidTopicError(TimerPersistenceError):
+    pass
+
+
+class JournalValidationError(TimerPersistenceError):
+    pass

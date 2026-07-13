@@ -1,31 +1,68 @@
 {% if active_session %}
-<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050; width: 300px;">
-    <div
-        class="card shadow-lg border-{% if active_session.status == 'IN_PROGRESS' %}primary{% else %}warning{% endif %}"
-        x-data="timerWidget({{ elapsed_seconds }}, '{{ active_session.status }}')"
-    >
-        <div class="card-body">
-            <h6 class="card-subtitle mb-2 text-muted">{{ active_session.topic.name }}</h6>
-            <h3 class="card-title text-center mb-3 fw-bold" x-text="formattedTime">00:00:00</h3>
+<div x-data="timerWidget({{ elapsed_seconds }}, '{{ active_session.status }}')">
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050; width: 300px;">
+        <div class="card shadow-lg border-{% if active_session.status == 'IN_PROGRESS' %}primary{% else %}warning{% endif %}">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">{{ active_session.topic.name }}</h6>
+                <h3 class="card-title text-center mb-3 fw-bold" x-text="formattedTime">00:00:00</h3>
 
-            <div class="d-flex justify-content-between">
-                <template x-if="status === 'IN_PROGRESS'">
-                    <button class="btn btn-outline-warning flex-fill me-2" @click="pauseSession" :disabled="loading">
-                        <i class="bi bi-pause-fill"></i> Pausar
+                <div class="d-flex justify-content-between">
+                    <template x-if="status === 'IN_PROGRESS'">
+                        <button class="btn btn-outline-warning flex-fill me-2" @click="pauseSession" :disabled="loading">
+                            <i class="bi bi-pause-fill"></i> Pausar
+                        </button>
+                    </template>
+                    <template x-if="status === 'PAUSED'">
+                        <button class="btn btn-outline-primary flex-fill me-2" @click="resumeSession" :disabled="loading">
+                            <i class="bi bi-play-fill"></i> Retomar
+                        </button>
+                    </template>
+                    <button class="btn btn-outline-danger flex-fill ms-2" @click="stopSession" :disabled="loading">
+                        <i class="bi bi-stop-fill"></i> Parar
                     </button>
-                </template>
-                <template x-if="status === 'PAUSED'">
-                    <button class="btn btn-outline-primary flex-fill me-2" @click="resumeSession" :disabled="loading">
-                        <i class="bi bi-play-fill"></i> Retomar
-                    </button>
-                </template>
-                <button class="btn btn-outline-danger flex-fill ms-2" @click="stopSession" :disabled="loading">
-                    <i class="bi bi-stop-fill"></i> Parar
-                </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="stopSessionModal" tabindex="-1" aria-labelledby="stopSessionModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="stopSessionModalLabel">Fechar sessão</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="objectiveAchieved" class="form-label">Resultado do objetivo</label>
+                        <select id="objectiveAchieved" class="form-select" x-model="objectiveAchieved">
+                            <option value="YES">Concluído</option>
+                            <option value="PARTIAL">Parcial</option>
+                            <option value="NO">Não concluído</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="objectiveResult" class="form-label">O que aconteceu com o objetivo?</label>
+                        <textarea id="objectiveResult" class="form-control" rows="3" x-model="objectiveResult"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="learningNote" class="form-label">Dificuldades e aprendizados</label>
+                        <textarea id="learningNote" class="form-control" rows="3" x-model="learningNote"></textarea>
+                    </div>
+                    <div>
+                        <label for="nextStep" class="form-label">Próximo passo</label>
+                        <input id="nextStep" class="form-control" x-model="nextStep">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" @click="finishSession" :disabled="loading">Finalizar</button>
+                </div>
             </div>
         </div>
     </div>
 </div>
+{% endif %}
 
 <script>
     document.addEventListener('alpine:init', () => {
@@ -34,6 +71,10 @@
             status: initialStatus,
             loading: false,
             intervalId: null,
+            objectiveAchieved: 'YES',
+            objectiveResult: '',
+            learningNote: '',
+            nextStep: '',
 
             init() {
                 if (this.status === 'IN_PROGRESS') {
@@ -76,19 +117,25 @@
                 return cookieValue;
             },
 
-            async sendAction(url) {
+            async sendAction(url, payload = {}) {
                 this.loading = true;
+                const formData = new FormData();
+                Object.entries(payload).forEach(([key, value]) => {
+                    formData.append(key, value);
+                });
                 try {
                     const response = await fetch(url, {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json',
                             'X-CSRFToken': this.getCookie('csrftoken')
-                        }
+                        },
+                        body: formData
                     });
                     if (response.ok) {
-                        // Recarrega o widget com os novos dados e estilos do backend
                         htmx.ajax('GET', "{% url 'timer_widget' %}", {target: '#global-timer-container', swap: 'innerHTML'});
+                    } else {
+                        const data = await response.json();
+                        alert(data.error || "Erro ao atualizar a sessão.");
                     }
                 } catch (error) {
                     console.error("Erro na comunicação com o backend:", error);
@@ -108,9 +155,19 @@
 
             stopSession() {
                 this.stopTick();
-                this.sendAction("{% url 'stop_session' %}");
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('stopSessionModal')).show();
+            },
+
+            finishSession() {
+                this.stopTick();
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('stopSessionModal')).hide();
+                this.sendAction("{% url 'stop_session' %}", {
+                    objective_achieved: this.objectiveAchieved,
+                    objective_result: this.objectiveResult,
+                    learning_note: this.learningNote,
+                    next_step: this.nextStep
+                });
             }
         }));
     });
 </script>
-{% endif %}

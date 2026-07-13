@@ -92,6 +92,9 @@ class StudySession(models.Model):
         choices=ObjectiveAchieved.choices,
         default=ObjectiveAchieved.PENDING,
     )
+    objective_result = models.TextField(blank=True)
+    learning_note = models.TextField(blank=True)
+    next_step = models.CharField(max_length=255, blank=True)
     mode = models.CharField(max_length=10, choices=Mode.choices, default=Mode.FREE)
     status = models.CharField(
         max_length=15, choices=Status.choices, default=Status.IN_PROGRESS
