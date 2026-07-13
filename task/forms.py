@@ -7,6 +7,7 @@ from .models import TaskDay
 
 
 class TaskDayForm(forms.ModelForm):
+
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
@@ -31,7 +32,6 @@ class TaskDayForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
         selected_date = cleaned_data.get("date")
-
         if selected_date and self.user:
             if TaskDay.objects.filter(user=self.user, date=selected_date).exists():
                 raise ValidationError(

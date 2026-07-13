@@ -14,17 +14,13 @@ class DashboardView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
-
         context.update(services.get_weekly_chart_data(user))
         context.update(services.get_calendar_data(user, self.request))
         context.update(services.get_monthly_chart_data(user, self.request))
-
         context.update(services.get_streak_data(user))
         context.update(services.get_weekly_goal_data(user))
-
         context["today"] = timezone.localdate().isoformat()
         context["form"] = TaskDayForm()
-
         return context
 
     def post(self, request, *args, **kwargs):

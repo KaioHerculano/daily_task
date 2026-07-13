@@ -1,5 +1,3 @@
-# app/forms.py
-
 from django import forms
 from django.contrib.auth.forms import PasswordResetForm, UserCreationForm
 from django.contrib.auth.models import User
@@ -25,6 +23,7 @@ class UserUpdateForm(forms.ModelForm):
 
 
 class AsyncPasswordResetForm(PasswordResetForm):
+
     def send_mail(
         self,
         subject_template_name,
@@ -36,11 +35,8 @@ class AsyncPasswordResetForm(PasswordResetForm):
     ):
         subject = render_to_string(subject_template_name, context)
         subject = "".join(subject.splitlines())
-
         body = render_to_string(email_template_name, context)
-
         html_email = None
         if html_email_template_name is not None:
             html_email = render_to_string(html_email_template_name, context)
-
         send_email_task.delay(subject, body, from_email, to_email, html_email)

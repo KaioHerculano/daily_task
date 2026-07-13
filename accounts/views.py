@@ -8,10 +8,10 @@ from .forms import UserRegisterForm, UserUpdateForm
 
 
 class RegisterView(View):
+
     def get(self, request):
         if request.user.is_authenticated:
             return redirect("dashboard")
-
         form = UserRegisterForm()
         return render(request, "registration/register.html", {"form": form})
 
@@ -25,11 +25,11 @@ class RegisterView(View):
                 f"Bem-vindo, {user.username}! Sua conta foi criada com sucesso.",
             )
             return redirect("dashboard")
-
         return render(request, "registration/register.html", {"form": form})
 
 
 class ProfileView(LoginRequiredMixin, View):
+
     def get(self, request):
         form = UserUpdateForm(instance=request.user)
         return render(request, "profile.html", {"form": form})
@@ -40,5 +40,4 @@ class ProfileView(LoginRequiredMixin, View):
             form.save()
             messages.success(request, "Seu perfil foi atualizado com sucesso!")
             return redirect("profile")
-
         return render(request, "profile.html", {"form": form})
