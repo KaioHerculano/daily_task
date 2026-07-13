@@ -1,0 +1,116 @@
+{% if active_session %}
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050; width: 300px;">
+    <div
+        class="card shadow-lg border-{% if active_session.status == 'IN_PROGRESS' %}primary{% else %}warning{% endif %}"
+        x-data="timerWidget({{ elapsed_seconds }}, '{{ active_session.status }}')"
+    >
+        <div class="card-body">
+            <h6 class="card-subtitle mb-2 text-muted">{{ active_session.topic.name }}</h6>
+            <h3 class="card-title text-center mb-3 fw-bold" x-text="formattedTime">00:00:00</h3>
+
+            <div class="d-flex justify-content-between">
+                <template x-if="status === 'IN_PROGRESS'">
+                    <button class="btn btn-outline-warning flex-fill me-2" @click="pauseSession" :disabled="loading">
+                        <i class="bi bi-pause-fill"></i> Pausar
+                    </button>
+                </template>
+                <template x-if="status === 'PAUSED'">
+                    <button class="btn btn-outline-primary flex-fill me-2" @click="resumeSession" :disabled="loading">
+                        <i class="bi bi-play-fill"></i> Retomar
+                    </button>
+                </template>
+                <button class="btn btn-outline-danger flex-fill ms-2" @click="stopSession" :disabled="loading">
+                    <i class="bi bi-stop-fill"></i> Parar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('timerWidget', (initialSeconds, initialStatus) => ({
+            seconds: initialSeconds,
+            status: initialStatus,
+            loading: false,
+            intervalId: null,
+
+            init() {
+                if (this.status === 'IN_PROGRESS') {
+                    this.startTick();
+                }
+            },
+
+            startTick() {
+                this.intervalId = setInterval(() => {
+                    this.seconds++;
+                }, 1000);
+            },
+
+            stopTick() {
+                if (this.intervalId) {
+                    clearInterval(this.intervalId);
+                    this.intervalId = null;
+                }
+            },
+
+            get formattedTime() {
+                const hrs = Math.floor(this.seconds / 3600);
+                const mins = Math.floor((this.seconds % 3600) / 60);
+                const secs = this.seconds % 60;
+                return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            },
+
+            getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            },
+
+            async sendAction(url) {
+                this.loading = true;
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': this.getCookie('csrftoken')
+                        }
+                    });
+                    if (response.ok) {
+                        // Recarrega o widget com os novos dados e estilos do backend
+                        htmx.ajax('GET', "{% url 'timer_widget' %}", {target: '#global-timer-container', swap: 'innerHTML'});
+                    }
+                } catch (error) {
+                    console.error("Erro na comunicação com o backend:", error);
+                } finally {
+                    this.loading = false;
+                }
+            },
+
+            pauseSession() {
+                this.stopTick();
+                this.sendAction("{% url 'pause_session' %}");
+            },
+
+            resumeSession() {
+                this.sendAction("{% url 'resume_session' %}");
+            },
+
+            stopSession() {
+                this.stopTick();
+                this.sendAction("{% url 'stop_session' %}");
+            }
+        }));
+    });
+</script>
+{% endif %}

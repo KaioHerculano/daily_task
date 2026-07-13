@@ -87,3 +87,22 @@ class StopSessionView(LoginRequiredMixin, View):
             return JsonResponse({"error": str(e)}, status=400)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
+
+
+class TimerWidgetView(LoginRequiredMixin, TemplateView):
+    template_name = "components/_timer_widget.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        from .models import StudySession
+
+        session = StudySession.objects.filter(
+            user=self.request.user,
+            status__in=[StudySession.Status.IN_PROGRESS, StudySession.Status.PAUSED],
+        ).first()
+        context["active_session"] = session
+        if session:
+            context["elapsed_seconds"] = int(session.net_time.total_seconds())
+        else:
+            context["elapsed_seconds"] = 0
+        return context

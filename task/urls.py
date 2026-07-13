@@ -8,4 +8,5 @@ urlpatterns = [
     path("session/pause/", views.PauseSessionView.as_view(), name="pause_session"),
     path("session/resume/", views.ResumeSessionView.as_view(), name="resume_session"),
     path("session/stop/", views.StopSessionView.as_view(), name="stop_session"),
+    path("session/widget/", views.TimerWidgetView.as_view(), name="timer_widget"),
 ]

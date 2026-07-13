@@ -32,15 +32,21 @@ class RegisterView(View):
 class ProfileView(LoginRequiredMixin, View):
 
     def get(self, request):
+        from .models import UserProfile
+
+        profile, _ = UserProfile.objects.get_or_create(user=request.user)
         form = UserUpdateForm(instance=request.user)
-        profile_form = UserProfileForm(instance=request.user.profile)
+        profile_form = UserProfileForm(instance=profile)
         return render(
             request, "profile.html", {"form": form, "profile_form": profile_form}
         )
 
     def post(self, request):
+        from .models import UserProfile
+
+        profile, _ = UserProfile.objects.get_or_create(user=request.user)
         form = UserUpdateForm(request.POST, instance=request.user)
-        profile_form = UserProfileForm(request.POST, instance=request.user.profile)
+        profile_form = UserProfileForm(request.POST, instance=profile)
 
         if form.is_valid() and profile_form.is_valid():
             form.save()
