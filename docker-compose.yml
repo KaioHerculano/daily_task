@@ -5,6 +5,8 @@ services:
     restart: always
     env_file:
       - .env
+    environment:
+      - APP_ROLE=web
     ports:
       - 8002:8002
     depends_on:
@@ -32,11 +34,11 @@ services:
 
   celery:
     build: .
-    command: celery -A app worker -l info
     restart: always
     env_file:
       - .env
     environment:
+      - APP_ROLE=worker
       - CELERY_BROKER_URL=redis://redis:6379/0
     depends_on:
       - daily_task_db
@@ -44,11 +46,11 @@ services:
 
   celery-beat:
     build: .
-    command: celery -A app beat -l info
     restart: always
     env_file:
       - .env
     environment:
+      - APP_ROLE=beat
       - CELERY_BROKER_URL=redis://redis:6379/0
     depends_on:
       - daily_task_db
