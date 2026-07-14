@@ -24,6 +24,7 @@ class TaskDayDataMigrationTest(TransactionTestCase):
         TaskDay.objects.create(user=self.user, date=date(2023, 10, 2))
 
     def tearDown(self):
+        self.executor = MigrationExecutor(connection)
         self.executor.migrate(self.migrate_latest)
         super().tearDown()
 
@@ -55,6 +56,7 @@ class TaskDayDataMigrationTest(TransactionTestCase):
     def test_migration_rollback_removes_generated_study_data(self):
         self.executor.loader.build_graph()
         self.executor.migrate(self.migrate_to)
+        self.executor = MigrationExecutor(connection)
         self.executor.migrate(self.migrate_from)
         rolled_back_apps = self.executor.loader.project_state(self.migrate_from).apps
 
