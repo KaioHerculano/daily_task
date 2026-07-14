@@ -175,6 +175,12 @@ CELERY_BROKER_URL = config("CELERY_BROKER_URL", default="redis://redis:6379/0")
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_TIMEZONE = TIME_ZONE
+CELERY_TASK_DEFAULT_QUEUE = config("CELERY_TASK_DEFAULT_QUEUE", default="celery")
+CELERY_TASK_ROUTES = {
+    "task.tasks.send_daily_reminders": {"queue": CELERY_TASK_DEFAULT_QUEUE},
+    "task.tasks.process_user_reminder": {"queue": CELERY_TASK_DEFAULT_QUEUE},
+    "task.tasks.generate_weekly_study_insights": {"queue": CELERY_TASK_DEFAULT_QUEUE},
+}
 
 # Configuração do Celery Beat
 CELERY_BEAT_SCHEDULE = {

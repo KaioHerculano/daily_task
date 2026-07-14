@@ -41,9 +41,11 @@ case "$APP_ROLE" in
     echo "Iniciando Celery Worker..."
 
     : "${WORKER_NAME:=worker}"
+    : "${CELERY_QUEUE:=celery}"
 
     exec celery -A app worker \
         --loglevel=info \
+        --queues="$CELERY_QUEUE" \
         --concurrency=10 \
         --max-tasks-per-child=200 \
         --prefetch-multiplier=2 \
