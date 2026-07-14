@@ -182,6 +182,17 @@ CELERY_BEAT_SCHEDULE = {
         "task": "task.tasks.send_daily_reminders",
         "schedule": crontab(hour=20, minute=0),
     },
+    "gerar-insights-semanais-segunda-as-06h": {
+        "task": "task.tasks.generate_weekly_study_insights",
+        "schedule": crontab(day_of_week="mon", hour=6, minute=0),
+    },
 }
 
 BASE_URL = config("BASE_URL", default="http://127.0.0.1:8000")
+AI_PROVIDER = config("AI_PROVIDER", default="")
+AI_MODEL = config("AI_MODEL", default="")
+AI_APP_NAME = config("AI_APP_NAME", default="")
+AI_SITE_URL = config("AI_SITE_URL", default=BASE_URL)
+AI_REQUEST_TIMEOUT = config("AI_REQUEST_TIMEOUT", default=30, cast=int)
+OPENROUTER_API_KEY = config("OPENROUTER_API_KEY", default="")
+OPENROUTER_API_URL = config("OPENROUTER_API_URL", default="")

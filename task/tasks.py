@@ -1,4 +1,5 @@
 import logging
+from datetime import timedelta
 
 from celery import shared_task
 from django.conf import settings
@@ -9,6 +10,7 @@ from django.utils import timezone
 
 from utils.security import mask_email
 
+from .ai_services import generate_weekly_insights
 from .models import DailyReminderLog, TaskDay
 
 logger = logging.getLogger(__name__)
@@ -70,3 +72,11 @@ def process_user_reminder(self, user_id):
     except Exception as e:
         logger.error(f"[LEMBRETE] Erro ao enviar para {masked_to_email}: {str(e)}")
         raise
+
+
+@shared_task
+def generate_weekly_study_insights():
+    reference_date = timezone.localdate() - timedelta(days=1)
+    insights = generate_weekly_insights(reference_date=reference_date)
+    logger.info(f"[INSIGHTS] Insights semanais gerados: {len(insights)}")
+    return len(insights)

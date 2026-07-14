@@ -138,3 +138,21 @@ class SessionPause(models.Model):
 
     def __str__(self):
         return f"Pause for {self.session.id}"
+
+
+class StudyInsight(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="insights")
+    week_start = models.DateField()
+    week_end = models.DateField()
+    summary = models.TextField()
+    strengths = models.TextField(blank=True)
+    risks = models.TextField(blank=True)
+    next_actions = models.TextField(blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        unique_together = ("user", "week_start", "week_end")
+        ordering = ["-week_start", "-created_at"]
+
+    def __str__(self):
+        return f"Insight {self.user.username} {self.week_start}"

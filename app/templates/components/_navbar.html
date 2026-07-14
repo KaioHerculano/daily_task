@@ -1,73 +1,55 @@
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom sticky-top" data-bs-theme="dark">
-  <div class="container">
-    <a class="navbar-brand fw-bold" href="{% url 'dashboard' %}">
+<nav class="study-navbar navbar bg-body border-bottom sticky-top shadow-sm">
+  <div class="container d-flex flex-wrap align-items-center gap-2 py-2">
+    <a class="navbar-brand fw-semibold d-flex align-items-center gap-2 me-auto" href="{% url 'dashboard' %}">
       <i class="bi bi-graph-up-arrow text-primary"></i>
-      Daily Task
+      <span>Daily Task</span>
     </a>
 
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
+    <a class="btn btn-sm btn-outline-secondary d-none d-sm-inline-flex align-items-center gap-2" href="{% url 'dashboard' %}">
+      <i class="bi bi-grid"></i>
+      <span>Dashboard</span>
+    </a>
 
-    <div class="collapse navbar-collapse" id="main-navbar">
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <li class="nav-item">
-          <a class="nav-link active" href="{% url 'dashboard' %}">Dashboard</a>
-        </li>
-      </ul>
-
-      <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center">
-        <li class="nav-item dropdown">
-          <button class="btn btn-link nav-link dropdown-toggle" id="bd-theme" type="button" aria-expanded="false" data-bs-toggle="dropdown" aria-label="Toggle theme (auto)">
-            <i class="bi bi-circle-half"></i> <span class="d-lg-none ms-2">Tema</span>
+    <div class="dropdown">
+      <button class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-2" id="bd-theme" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Alternar tema">
+        <i class="bi bi-circle-half"></i>
+        <span class="d-none d-md-inline">Tema</span>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="bd-theme">
+        <li>
+          <button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="light">
+            <i class="bi bi-sun-fill me-2"></i> Claro
           </button>
-          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="bd-theme-text">
-            <li>
-              <button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="light">
-                <i class="bi bi-sun-fill me-2"></i> Claro
-              </button>
-            </li>
-            <li>
-              <button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="dark">
-                <i class="bi bi-moon-stars-fill me-2"></i> Escuro
-              </button>
-            </li>
-            <li>
-              <button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="auto">
-                <i class="bi bi-circle-half me-2"></i> Automático
-              </button>
-            </li>
-          </ul>
         </li>
-
-        {% if user.is_authenticated %}
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="bi bi-person-circle"></i> {{ user.username }}
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end">
-              <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="bi bi-person me-2"></i>Meu Perfil</a></li>
-              <li><hr class="dropdown-divider"></li>
-              <li>
-                <form class="d-inline" action="{% url 'logout' %}" method="post">
-                  {% csrf_token %}
-                  <button type="submit" class="dropdown-item text-danger d-flex align-items-center border-0 bg-transparent">
-                      <i class="bi bi-box-arrow-right me-2"></i>Sair
-                  </button>
-                </form>
-              </li>
-            </ul>
-          </li>
-        {% else %}
-          <li class="nav-item">
-            <a href="{% url 'login' %}" class="nav-link">Login</a>
-          </li>
-          <li class="nav-item">
-            <a href="{% url 'register' %}" class="nav-link">Cadastrar</a>
-          </li>
-        {% endif %}
+        <li>
+          <button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="dark">
+            <i class="bi bi-moon-stars-fill me-2"></i> Escuro
+          </button>
+        </li>
+        <li>
+          <button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="auto">
+            <i class="bi bi-circle-half me-2"></i> Automatico
+          </button>
+        </li>
       </ul>
     </div>
+
+    {% if user.is_authenticated %}
+      <a class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-2" href="{% url 'profile' %}">
+        <i class="bi bi-person-circle"></i>
+        <span class="d-none d-md-inline">{{ user.username }}</span>
+      </a>
+      <form action="{% url 'logout' %}" method="post" class="m-0">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-2">
+          <i class="bi bi-box-arrow-right"></i>
+          <span class="d-none d-md-inline">Sair</span>
+        </button>
+      </form>
+    {% else %}
+      <a href="{% url 'login' %}" class="btn btn-sm btn-outline-secondary">Login</a>
+      <a href="{% url 'register' %}" class="btn btn-sm btn-primary">Cadastrar</a>
+    {% endif %}
   </div>
 </nav>
 
@@ -75,9 +57,8 @@
   document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('[data-bs-theme-value]').forEach(toggle => {
       toggle.addEventListener('click', () => {
-        const theme = toggle.getAttribute('data-bs-theme-value');
-        document.documentElement.setAttribute('data-bs-theme', theme);
-        localStorage.setItem('theme', theme);
+        window.studyTaskSetTheme(toggle.getAttribute('data-bs-theme-value'));
+        window.dispatchEvent(new Event('study-task-theme-change'));
       });
     });
   });
