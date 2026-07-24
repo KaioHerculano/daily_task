@@ -78,5 +78,7 @@ class TopicForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if user:
             self.fields["subject"].queryset = Subject.objects.filter(
-                user=user, is_active=True
+                user=user,
+                is_active=True,
+                completed_at__isnull=True,
             )

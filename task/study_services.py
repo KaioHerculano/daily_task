@@ -24,7 +24,14 @@ def start_session(user, topic_id, objective_text="", mode=StudySession.Mode.FREE
         raise ActiveSessionExistsError("User already has an active or paused session.")
 
     try:
-        topic = Topic.objects.get(id=topic_id, subject__user=user)
+        topic = Topic.objects.get(
+            id=topic_id,
+            subject__user=user,
+            subject__is_active=True,
+            subject__completed_at__isnull=True,
+            is_active=True,
+            completed_at__isnull=True,
+        )
     except Topic.DoesNotExist as exc:
         raise InvalidTopicError("Topic not found.") from exc
     session = StudySession.objects.create(
@@ -164,3 +171,69 @@ def delete_subject(user, subject_id):
         return subject, "deactivated"
     subject.delete()
     return subject, "deleted"
+
+
+def complete_topic(user, topic_id, completion_summary):
+    completion_summary = completion_summary.strip()
+    if not completion_summary:
+        raise JournalValidationError("Completion summary is required.")
+
+    topic = Topic.objects.filter(
+        id=topic_id,
+        subject__user=user,
+        subject__is_active=True,
+        subject__completed_at__isnull=True,
+        is_active=True,
+    ).first()
+    if not topic:
+        raise InvalidTopicError("Topic not found.")
+    if topic.completed_at:
+        raise InvalidStateTransitionError("Topic is already completed.")
+    has_active_session = StudySession.objects.filter(
+        topic=topic,
+        status__in=[StudySession.Status.IN_PROGRESS, StudySession.Status.PAUSED],
+    ).exists()
+    if has_active_session:
+        raise InvalidStateTransitionError("Topic has an active session.")
+
+    completed_at = timezone.now()
+    Topic.objects.filter(pk=topic.pk).update(
+        completed_at=completed_at,
+        completion_summary=completion_summary,
+    )
+    topic.completed_at = completed_at
+    topic.completion_summary = completion_summary
+    return topic
+
+
+def complete_subject(user, subject_id, completion_summary):
+    completion_summary = completion_summary.strip()
+    if not completion_summary:
+        raise JournalValidationError("Completion summary is required.")
+
+    subject = Subject.objects.filter(id=subject_id, user=user, is_active=True).first()
+    if not subject:
+        raise InvalidTopicError("Subject not found.")
+    if subject.completed_at:
+        raise InvalidStateTransitionError("Subject is already completed.")
+    has_active_session = StudySession.objects.filter(
+        topic__subject=subject,
+        status__in=[StudySession.Status.IN_PROGRESS, StudySession.Status.PAUSED],
+    ).exists()
+    if has_active_session:
+        raise InvalidStateTransitionError("Subject has an active session.")
+
+    completed_at = timezone.now()
+    with transaction.atomic():
+        Subject.objects.filter(pk=subject.pk).update(
+            completed_at=completed_at,
+            completion_summary=completion_summary,
+        )
+        Topic.objects.filter(
+            subject=subject,
+            is_active=True,
+            completed_at__isnull=True,
+        ).update(completed_at=completed_at)
+    subject.completed_at = completed_at
+    subject.completion_summary = completion_summary
+    return subject

@@ -150,7 +150,11 @@ def get_delayed_topics(user):
     cutoff = timezone.now() - timedelta(days=7)
     return (
         Topic.objects.filter(
-            subject__user=user, is_active=True, subject__is_active=True
+            subject__user=user,
+            is_active=True,
+            subject__is_active=True,
+            completed_at__isnull=True,
+            subject__completed_at__isnull=True,
         )
         .annotate(
             last_completed_session=Max(
@@ -172,10 +176,12 @@ def get_latest_insight(user):
 
 
 def get_active_subjects_with_topics(user):
-    active_topics = Topic.objects.filter(is_active=True)
-    return Subject.objects.filter(user=user, is_active=True).prefetch_related(
-        Prefetch("topics", queryset=active_topics)
-    )
+    active_topics = Topic.objects.filter(is_active=True, completed_at__isnull=True)
+    return Subject.objects.filter(
+        user=user,
+        is_active=True,
+        completed_at__isnull=True,
+    ).prefetch_related(Prefetch("topics", queryset=active_topics))
 
 
 def get_active_study_session(user):
@@ -246,4 +252,44 @@ def get_monthly_chart_data(user, request):
         "monthly_values": [studies_dict.get(d, 0) for d in all_months_in_range],
         "start_year": start_year,
         "end_year": end_year,
+    }
+
+
+def get_completed_studies_context(user):
+    completed_topics = (
+        Topic.objects.filter(
+            subject__user=user,
+            is_active=True,
+            completed_at__isnull=False,
+        )
+        .select_related("subject")
+        .prefetch_related(
+            Prefetch(
+                "sessions",
+                queryset=StudySession.objects.filter(
+                    user=user, status=StudySession.Status.COMPLETED
+                )
+                .prefetch_related("pauses")
+                .order_by("-end_time"),
+            )
+        )
+        .order_by("-completed_at", "subject__name", "name")
+    )
+    completed_subjects = (
+        Subject.objects.filter(
+            user=user,
+            is_active=True,
+            completed_at__isnull=False,
+        )
+        .prefetch_related(
+            Prefetch(
+                "topics",
+                queryset=Topic.objects.filter(is_active=True).order_by("name"),
+            )
+        )
+        .order_by("-completed_at", "name")
+    )
+    return {
+        "completed_topics": completed_topics,
+        "completed_subjects": completed_subjects,
     }

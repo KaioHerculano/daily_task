@@ -48,6 +48,8 @@ class Subject(models.Model):
     name = models.CharField(max_length=100)
     color = models.CharField(max_length=7, default="#000000")
     is_active = models.BooleanField(default=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    completion_summary = models.TextField(blank=True)
 
     def __str__(self):
         return f"{self.name} ({self.user.username})"
@@ -59,6 +61,8 @@ class Topic(models.Model):
     )
     name = models.CharField(max_length=100)
     is_active = models.BooleanField(default=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    completion_summary = models.TextField(blank=True)
 
     def __str__(self):
         return f"{self.name} - {self.subject.name}"
