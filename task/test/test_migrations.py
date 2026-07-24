@@ -8,7 +8,7 @@ from django.test import TransactionTestCase
 class TaskDayDataMigrationTest(TransactionTestCase):
     migrate_from = [("task", "0005_studysession_sessionpause_subject_topic_and_more")]
     migrate_to = [("task", "0006_taskday_data_migration")]
-    migrate_latest = [("task", "0008_studyinsight")]
+    migrate_latest = [("task", "0009_complete_study_items")]
 
     def setUp(self):
         super().setUp()

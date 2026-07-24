@@ -8,7 +8,10 @@ from django.test import TestCase, override_settings
 from django.utils import timezone
 from faker import Faker
 
-from task.ai_services import generate_weekly_insight_for_user
+from task.ai_services import (
+    build_weekly_study_payload,
+    generate_weekly_insight_for_user,
+)
 from task.models import StudyInsight, StudySession, Subject, Topic
 
 fake = Faker()
@@ -96,3 +99,18 @@ class StudyInsightTest(TestCase):
         mock_generate.assert_called_once_with(
             reference_date=timezone.localdate() - timedelta(days=1)
         )
+
+    def test_ai_payload_includes_sessions_from_completed_topics(self):
+        self.topic.completed_at = timezone.now()
+        self.topic.completion_summary = "Completed after routing practice."
+        self.topic.save(update_fields=["completed_at", "completion_summary"])
+        week_start = timezone.localdate() - timedelta(
+            days=timezone.localdate().weekday()
+        )
+        week_end = week_start + timedelta(days=6)
+
+        payload = build_weekly_study_payload(self.user, week_start, week_end)
+
+        self.assertEqual(len(payload), 1)
+        self.assertEqual(payload[0]["topic"], self.topic.name)
+        self.assertEqual(payload[0]["learning_note"], "Graphs need attention.")
