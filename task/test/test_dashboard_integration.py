@@ -168,6 +168,8 @@ class DashboardIntegrationTest(TestCase):
         self.assertNotContains(response, inactive_topic.name)
 
     def test_complete_topic_stores_summary_and_hides_from_dashboard(self):
+        self.topic.name = "Completed Topic Unique Label"
+        self.topic.save(update_fields=["name"])
         summary = fake.paragraph()
         response = self.client.post(
             reverse("complete_topic", kwargs={"pk": self.topic.id}),
