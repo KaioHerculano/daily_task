@@ -256,13 +256,13 @@ def get_monthly_chart_data(user, request):
 
 
 def get_completed_studies_context(user):
+    completed_topic_queryset = Topic.objects.filter(
+        subject__user=user,
+        is_active=True,
+        completed_at__isnull=False,
+    )
     completed_topics = (
-        Topic.objects.filter(
-            subject__user=user,
-            is_active=True,
-            completed_at__isnull=False,
-        )
-        .select_related("subject")
+        completed_topic_queryset.select_related("subject")
         .prefetch_related(
             Prefetch(
                 "sessions",
@@ -275,21 +275,25 @@ def get_completed_studies_context(user):
         )
         .order_by("-completed_at", "subject__name", "name")
     )
-    completed_subjects = (
-        Subject.objects.filter(
-            user=user,
-            is_active=True,
-            completed_at__isnull=False,
-        )
-        .prefetch_related(
-            Prefetch(
-                "topics",
-                queryset=Topic.objects.filter(is_active=True).order_by("name"),
-            )
-        )
-        .order_by("-completed_at", "name")
+    completed_subject_queryset = Subject.objects.filter(
+        user=user,
+        is_active=True,
+        completed_at__isnull=False,
     )
+    completed_subjects = completed_subject_queryset.prefetch_related(
+        Prefetch(
+            "topics",
+            queryset=Topic.objects.filter(is_active=True).order_by("name"),
+        )
+    ).order_by("-completed_at", "name")
     return {
         "completed_topics": completed_topics,
         "completed_subjects": completed_subjects,
+        "completed_topic_count": completed_topic_queryset.count(),
+        "completed_subject_count": completed_subject_queryset.count(),
+        "completed_session_count": StudySession.objects.filter(
+            user=user,
+            topic__in=completed_topic_queryset,
+            status=StudySession.Status.COMPLETED,
+        ).count(),
     }
