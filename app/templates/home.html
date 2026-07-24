@@ -434,6 +434,11 @@
                       <span class="tw-h-2.5 tw-w-2.5 tw-shrink-0 tw-rounded-full" style="background-color: {{ subject.color }};"></span>
                       <span class="tw-truncate tw-text-sm tw-font-medium tw-text-slate-900">{{ subject.name }}</span>
                     </div>
+                    <div class="tw-flex tw-shrink-0 tw-items-center tw-gap-2">
+                    <button type="button" class="study-icon-button study-icon-button-square" title="Finalizar materia" aria-label="Finalizar materia" data-bs-toggle="modal" data-bs-target="#completeSubjectModal{{ subject.id }}">
+                      <i class="bi bi-check2-circle"></i>
+                      <span class="tw-sr-only">Finalizar materia</span>
+                    </button>
                     <form method="post" action="{% url 'delete_subject' subject.id %}">
                       {% csrf_token %}
                       <button type="submit" class="study-icon-button study-icon-button-square" title="Excluir matéria" aria-label="Excluir Matéria">
@@ -441,6 +446,7 @@
                         <span class="tw-sr-only">Excluir Matéria</span>
                       </button>
                     </form>
+                    </div>
                   </div>
                   <div class="tw-divide-y tw-divide-slate-200">
                     {% for topic in subject.topics.all %}
@@ -454,6 +460,10 @@
                               <span class="tw-sr-only">Excluir Tópico</span>
                             </button>
                           </form>
+                          <button type="button" class="study-icon-button study-icon-button-circle" title="Finalizar topico" aria-label="Finalizar topico" data-bs-toggle="modal" data-bs-target="#completeTopicModal{{ topic.id }}">
+                            <i class="bi bi-check2"></i>
+                            <span class="tw-sr-only">Finalizar topico</span>
+                          </button>
                           <button class="study-play-button" @click="openStartSession({{ topic.id }})" title="Iniciar estudo" :disabled="loading || {{ active_session|yesno:'true,false' }}">
                             <i class="bi bi-play-fill"></i>
                           </button>
@@ -570,6 +580,53 @@
       </div>
     </div>
   </div>
+
+  {% for subject in subjects %}
+    <div class="modal fade" id="completeSubjectModal{{ subject.id }}" tabindex="-1" aria-labelledby="completeSubjectModalLabel{{ subject.id }}" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <form method="post" action="{% url 'complete_subject' subject.id %}">
+            {% csrf_token %}
+            <div class="modal-header">
+              <h5 class="modal-title" id="completeSubjectModalLabel{{ subject.id }}">Finalizar materia</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <label for="subjectCompletionSummary{{ subject.id }}" class="form-label">Resumo final</label>
+              <textarea id="subjectCompletionSummary{{ subject.id }}" name="completion_summary" class="form-control" rows="5" required placeholder="Escreva o que voce concluiu, principais aprendizados e o que vale revisar no futuro."></textarea>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-primary">Finalizar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% for topic in subject.topics.all %}
+      <div class="modal fade" id="completeTopicModal{{ topic.id }}" tabindex="-1" aria-labelledby="completeTopicModalLabel{{ topic.id }}" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <form method="post" action="{% url 'complete_topic' topic.id %}">
+              {% csrf_token %}
+              <div class="modal-header">
+                <h5 class="modal-title" id="completeTopicModalLabel{{ topic.id }}">Finalizar topico</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <label for="topicCompletionSummary{{ topic.id }}" class="form-label">Resumo final</label>
+                <textarea id="topicCompletionSummary{{ topic.id }}" name="completion_summary" class="form-control" rows="5" required placeholder="Escreva o que voce aprendeu, pontos importantes e o que revisar depois."></textarea>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Finalizar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  {% endfor %}
 
   <div class="modal fade" id="startSessionModal" tabindex="-1" aria-labelledby="startSessionModalLabel" aria-hidden="true">
     <div class="modal-dialog">

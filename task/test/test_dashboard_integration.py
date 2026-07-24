@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 from faker import Faker
 
 from task.models import StudySession, Subject, Topic
@@ -165,3 +166,139 @@ class DashboardIntegrationTest(TestCase):
         response = self.client.get(reverse("dashboard"))
         self.assertNotContains(response, inactive_subject.name)
         self.assertNotContains(response, inactive_topic.name)
+
+    def test_complete_topic_stores_summary_and_hides_from_dashboard(self):
+        summary = fake.paragraph()
+        response = self.client.post(
+            reverse("complete_topic", kwargs={"pk": self.topic.id}),
+            {"completion_summary": summary},
+        )
+
+        self.assertRedirects(response, reverse("dashboard"))
+        self.topic.refresh_from_db()
+        self.assertIsNotNone(self.topic.completed_at)
+        self.assertEqual(self.topic.completion_summary, summary)
+
+        dashboard_response = self.client.get(reverse("dashboard"))
+        self.assertNotContains(dashboard_response, self.topic.name)
+
+    def test_complete_topic_requires_summary(self):
+        response = self.client.post(
+            reverse("complete_topic", kwargs={"pk": self.topic.id}),
+            {"completion_summary": "  "},
+        )
+
+        self.assertRedirects(response, reverse("dashboard"))
+        self.topic.refresh_from_db()
+        self.assertIsNone(self.topic.completed_at)
+
+    def test_complete_topic_rejects_item_from_other_user(self):
+        other_subject = Subject.objects.create(user=self.other_user, name=fake.word())
+        other_topic = Topic.objects.create(subject=other_subject, name=fake.word())
+
+        self.client.post(
+            reverse("complete_topic", kwargs={"pk": other_topic.id}),
+            {"completion_summary": fake.paragraph()},
+        )
+
+        other_topic.refresh_from_db()
+        self.assertIsNone(other_topic.completed_at)
+
+    def test_complete_topic_rejects_active_session(self):
+        StudySession.objects.create(
+            user=self.user,
+            topic=self.topic,
+            objective_text=fake.sentence(),
+            status=StudySession.Status.IN_PROGRESS,
+        )
+
+        response = self.client.post(
+            reverse("complete_topic", kwargs={"pk": self.topic.id}),
+            {"completion_summary": fake.paragraph()},
+        )
+
+        self.assertRedirects(response, reverse("dashboard"))
+        self.topic.refresh_from_db()
+        self.assertIsNone(self.topic.completed_at)
+
+    def test_complete_subject_stores_summary_and_completes_topics(self):
+        second_topic = Topic.objects.create(subject=self.subject, name=fake.word())
+        summary = fake.paragraph()
+
+        response = self.client.post(
+            reverse("complete_subject", kwargs={"pk": self.subject.id}),
+            {"completion_summary": summary},
+        )
+
+        self.assertRedirects(response, reverse("dashboard"))
+        self.subject.refresh_from_db()
+        self.topic.refresh_from_db()
+        second_topic.refresh_from_db()
+        self.assertIsNotNone(self.subject.completed_at)
+        self.assertEqual(self.subject.completion_summary, summary)
+        self.assertIsNotNone(self.topic.completed_at)
+        self.assertIsNotNone(second_topic.completed_at)
+
+    def test_complete_subject_rejects_active_session(self):
+        StudySession.objects.create(
+            user=self.user,
+            topic=self.topic,
+            objective_text=fake.sentence(),
+            status=StudySession.Status.PAUSED,
+        )
+
+        response = self.client.post(
+            reverse("complete_subject", kwargs={"pk": self.subject.id}),
+            {"completion_summary": fake.paragraph()},
+        )
+
+        self.assertRedirects(response, reverse("dashboard"))
+        self.subject.refresh_from_db()
+        self.assertIsNone(self.subject.completed_at)
+
+    def test_complete_subject_rejects_item_from_other_user(self):
+        other_subject = Subject.objects.create(user=self.other_user, name=fake.word())
+        Topic.objects.create(subject=other_subject, name=fake.word())
+
+        self.client.post(
+            reverse("complete_subject", kwargs={"pk": other_subject.id}),
+            {"completion_summary": fake.paragraph()},
+        )
+
+        other_subject.refresh_from_db()
+        self.assertIsNone(other_subject.completed_at)
+
+    def test_completed_studies_page_lists_summaries_and_sessions(self):
+        session = StudySession.objects.create(
+            user=self.user,
+            topic=self.topic,
+            objective_text="Study FastAPI routing",
+            objective_result="Routes finished.",
+            learning_note="Dependencies are clearer now.",
+            status=StudySession.Status.COMPLETED,
+            end_time=timezone.now(),
+        )
+        self.topic.completed_at = timezone.now()
+        self.topic.completion_summary = "Topic finished with routing notes."
+        self.topic.save(update_fields=["completed_at", "completion_summary"])
+
+        response = self.client.get(reverse("completed_studies"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.topic.name)
+        self.assertContains(response, self.topic.completion_summary)
+        self.assertContains(response, session.objective_text)
+        self.assertContains(response, session.learning_note)
+
+    def test_start_session_rejects_completed_topic(self):
+        self.topic.completed_at = timezone.now()
+        self.topic.completion_summary = fake.paragraph()
+        self.topic.save(update_fields=["completed_at", "completion_summary"])
+
+        response = self.client.post(
+            reverse("start_session"),
+            {"topic_id": self.topic.id, "objective_text": fake.sentence()},
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(StudySession.objects.count(), 0)
