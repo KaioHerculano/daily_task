@@ -12,6 +12,8 @@ from .exceptions import TimerPersistenceError
 from .forms import SubjectForm, TaskDayForm, TopicForm
 from .models import Subject, Topic
 from .study_services import (
+    complete_subject,
+    complete_topic,
     delete_subject,
     delete_topic,
     pause_session,
@@ -115,6 +117,15 @@ class TimerWidgetView(LoginRequiredMixin, TemplateView):
         return context
 
 
+class CompletedStudiesView(LoginRequiredMixin, TemplateView):
+    template_name = "completed_studies.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(services.get_completed_studies_context(self.request.user))
+        return context
+
+
 class SubjectCreateView(LoginRequiredMixin, CreateView):
     model = Subject
     form_class = SubjectForm
@@ -175,6 +186,34 @@ class TopicDeleteView(LoginRequiredMixin, View):
                 messages.success(request, "Tópico desativado e histórico preservado.")
             else:
                 messages.success(request, "Tópico removido com sucesso.")
+        except TimerPersistenceError as e:
+            messages.error(request, str(e))
+        return redirect("dashboard")
+
+
+class SubjectCompleteView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        try:
+            complete_subject(
+                request.user,
+                pk,
+                request.POST.get("completion_summary", ""),
+            )
+            messages.success(request, "Matéria finalizada com sucesso.")
+        except TimerPersistenceError as e:
+            messages.error(request, str(e))
+        return redirect("dashboard")
+
+
+class TopicCompleteView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        try:
+            complete_topic(
+                request.user,
+                pk,
+                request.POST.get("completion_summary", ""),
+            )
+            messages.success(request, "Tópico finalizado com sucesso.")
         except TimerPersistenceError as e:
             messages.error(request, str(e))
         return redirect("dashboard")

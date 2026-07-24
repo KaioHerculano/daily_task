@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="study-dashboard tw-min-h-screen tw-bg-slate-950 tw-px-4 tw-py-8 tw-text-slate-100 sm:tw-px-6 lg:tw-px-8">
+  <div class="tw-mx-auto tw-max-w-7xl">
+    <div class="tw-flex tw-flex-col tw-gap-4 sm:tw-flex-row sm:tw-items-end sm:tw-justify-between">
+      <div>
+        <p class="tw-text-sm tw-font-medium tw-text-blue-400">Arquivo de estudos</p>
+        <h1 class="tw-mt-2 tw-text-3xl tw-font-bold tw-text-white">Estudos concluidos</h1>
+        <p class="tw-mt-2 tw-max-w-2xl tw-text-sm tw-text-slate-400">Materias e topicos finalizados com resumos e historico preservados.</p>
+      </div>
+      <a href="{% url 'dashboard' %}" class="tw-inline-flex tw-h-10 tw-items-center tw-justify-center tw-rounded-lg tw-bg-blue-600 tw-px-4 tw-text-sm tw-font-medium tw-text-white hover:tw-bg-blue-700">
+        Voltar ao dashboard
+      </a>
+    </div>
+
+    <section class="tw-mt-8 tw-grid tw-gap-6 lg:tw-grid-cols-2">
+      <article class="tw-rounded-2xl tw-border tw-border-slate-700 tw-bg-slate-900 tw-p-6">
+        <h2 class="tw-text-lg tw-font-semibold tw-text-white">Materias finalizadas</h2>
+        <div class="tw-mt-5 tw-space-y-4">
+          {% for subject in completed_subjects %}
+            <div class="tw-rounded-xl tw-border tw-border-slate-700 tw-bg-slate-800 tw-p-4">
+              <div class="tw-flex tw-items-start tw-justify-between tw-gap-3">
+                <div class="tw-min-w-0">
+                  <div class="tw-flex tw-items-center tw-gap-2">
+                    <span class="tw-h-2.5 tw-w-2.5 tw-shrink-0 tw-rounded-full" style="background-color: {{ subject.color }};"></span>
+                    <h3 class="tw-truncate tw-text-base tw-font-semibold tw-text-white">{{ subject.name }}</h3>
+                  </div>
+                  <p class="tw-mt-1 tw-text-xs tw-text-slate-500">{{ subject.completed_at|date:"d/m/Y H:i" }}</p>
+                </div>
+              </div>
+              <p class="tw-mt-3 tw-text-sm tw-leading-6 tw-text-slate-300">{{ subject.completion_summary }}</p>
+              <div class="tw-mt-4 tw-flex tw-flex-wrap tw-gap-2">
+                {% for topic in subject.topics.all %}
+                  <span class="tw-rounded-full tw-bg-slate-700 tw-px-3 tw-py-1 tw-text-xs tw-text-slate-300">{{ topic.name }}</span>
+                {% empty %}
+                  <span class="tw-text-sm tw-text-slate-500">Nenhum topico vinculado.</span>
+                {% endfor %}
+              </div>
+            </div>
+          {% empty %}
+            <p class="tw-rounded-xl tw-border tw-border-dashed tw-border-slate-700 tw-p-4 tw-text-sm tw-text-slate-500">Nenhuma materia finalizada ainda.</p>
+          {% endfor %}
+        </div>
+      </article>
+
+      <article class="tw-rounded-2xl tw-border tw-border-slate-700 tw-bg-slate-900 tw-p-6">
+        <h2 class="tw-text-lg tw-font-semibold tw-text-white">Topicos finalizados</h2>
+        <div class="tw-mt-5 tw-space-y-4">
+          {% for topic in completed_topics %}
+            <div class="tw-rounded-xl tw-border tw-border-slate-700 tw-bg-slate-800 tw-p-4">
+              <div class="tw-flex tw-flex-col tw-gap-1">
+                <p class="tw-text-xs tw-font-medium tw-text-blue-400">{{ topic.subject.name }}</p>
+                <h3 class="tw-text-base tw-font-semibold tw-text-white">{{ topic.name }}</h3>
+                <p class="tw-text-xs tw-text-slate-500">{{ topic.completed_at|date:"d/m/Y H:i" }}</p>
+              </div>
+              <p class="tw-mt-3 tw-text-sm tw-leading-6 tw-text-slate-300">{{ topic.completion_summary }}</p>
+              <div class="tw-mt-4 tw-space-y-3">
+                {% for session in topic.sessions.all %}
+                  <div class="tw-rounded-lg tw-border tw-border-slate-700 tw-bg-slate-950 tw-p-3">
+                    <p class="tw-text-xs tw-text-slate-500">{{ session.end_time|date:"d/m/Y H:i" }}</p>
+                    <p class="tw-mt-1 tw-text-sm tw-font-medium tw-text-slate-200">{{ session.objective_text }}</p>
+                    {% if session.objective_result %}
+                      <p class="tw-mt-2 tw-text-sm tw-text-slate-400">{{ session.objective_result }}</p>
+                    {% endif %}
+                    {% if session.learning_note %}
+                      <p class="tw-mt-2 tw-text-sm tw-text-slate-400">{{ session.learning_note }}</p>
+                    {% endif %}
+                  </div>
+                {% empty %}
+                  <p class="tw-text-sm tw-text-slate-500">Nenhuma sessao concluida neste topico.</p>
+                {% endfor %}
+              </div>
+            </div>
+          {% empty %}
+            <p class="tw-rounded-xl tw-border tw-border-dashed tw-border-slate-700 tw-p-4 tw-text-sm tw-text-slate-500">Nenhum topico finalizado ainda.</p>
+          {% endfor %}
+        </div>
+      </article>
+    </section>
+  </div>
+</div>
+{% endblock %}
