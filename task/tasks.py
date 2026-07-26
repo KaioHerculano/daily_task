@@ -54,22 +54,26 @@ def process_user_reminder(self, user_id):
         user = User.objects.get(id=user_id)
     except User.DoesNotExist:
         return
-    if DailyReminderLog.objects.filter(user=user, date=today).exists():
+
+    log, created = DailyReminderLog.objects.get_or_create(user=user, date=today)
+    if not created:
         return
+
     context = {"user": user, "base_url": settings.BASE_URL}
     subject = render_to_string("emails/daily_reminder_subject.txt", context).strip()
     body = render_to_string("emails/daily_reminder_body.txt", context)
     html_email = render_to_string("emails/daily_reminder_body.html", context)
     masked_to_email = mask_email(user.email)
+
     try:
         email_message = EmailMultiAlternatives(
             subject, body, settings.DEFAULT_FROM_EMAIL, [user.email]
         )
         email_message.attach_alternative(html_email, "text/html")
         email_message.send()
-        DailyReminderLog.objects.create(user=user, date=today)
         logger.info(f"[LEMBRETE] Sucesso ao enviar e logar para {masked_to_email}")
     except Exception as e:
+        log.delete()
         logger.error(f"[LEMBRETE] Erro ao enviar para {masked_to_email}: {str(e)}")
         raise
 
