@@ -186,6 +186,16 @@
                         learning_note: this.learningNote,
                         next_step: this.nextStep
                     });
+                },
+
+                cancelSession() {
+                    this.stopTick();
+                    bootstrap.Modal.getOrCreateInstance(document.getElementById('cancelSessionModal')).show();
+                },
+
+                confirmCancelSession() {
+                    bootstrap.Modal.getOrCreateInstance(document.getElementById('cancelSessionModal')).hide();
+                    this.sendAction("{% url 'cancel_session' %}");
                 }
             };
         };
