@@ -8,7 +8,7 @@ from .exceptions import (
     JournalValidationError,
     SessionNotActiveError,
 )
-from .models import SessionPause, StudySession, Subject, Topic
+from .models import SessionPause, StudySession, Subject, TaskDay, Topic
 
 
 def start_session(user, topic_id, objective_text="", mode=StudySession.Mode.FREE):
@@ -143,6 +143,9 @@ def stop_session(
         session.objective_result = objective_result
         session.learning_note = learning_note
         session.next_step = next_step
+
+        TaskDay.objects.get_or_create(user=user, date=timezone.localdate())
+
     return session
 
 

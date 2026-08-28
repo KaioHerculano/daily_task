@@ -9,7 +9,8 @@ from task.exceptions import (
     JournalValidationError,
     SessionNotActiveError,
 )
-from task.models import StudySession, Subject, Topic
+)
+from task.models import StudySession, Subject, TaskDay, Topic
 from task.study_services import (
     pause_session,
     resume_session,
@@ -109,6 +110,9 @@ class StudyServicesTest(TestCase):
         )
         self.assertEqual(stopped_session.next_step, "Practice exercises.")
 
+        from django.utils import timezone
+        self.assertTrue(TaskDay.objects.filter(user=self.user, date=timezone.localdate()).exists())
+
     def test_stop_session_when_paused(self):
         session = start_session(self.user, self.topic.id, "Test Objective")
         pause_session(self.user)
@@ -122,6 +126,9 @@ class StudyServicesTest(TestCase):
         self.assertEqual(stopped_session.status, StudySession.Status.COMPLETED)
         self.assertIsNotNone(stopped_session.end_time)
         self.assertIsNotNone(stopped_session.pauses.first().pause_end)
+
+        from django.utils import timezone
+        self.assertTrue(TaskDay.objects.filter(user=self.user, date=timezone.localdate()).exists())
 
     def test_stop_session_fails_if_not_active(self):
         with self.assertRaises(SessionNotActiveError):
