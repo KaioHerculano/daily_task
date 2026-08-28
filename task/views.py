@@ -14,6 +14,7 @@ from .models import Subject, Topic
 from .study_services import (
     complete_subject,
     complete_topic,
+    delete_active_session,
     delete_subject,
     delete_topic,
     pause_session,
@@ -96,6 +97,17 @@ class StopSessionView(LoginRequiredMixin, View):
                 next_step=request.POST.get("next_step", ""),
             )
             return JsonResponse({"status": "stopped", "session_id": session.id})
+        except TimerPersistenceError as e:
+            return JsonResponse({"error": str(e)}, status=400)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+
+class CancelSessionView(LoginRequiredMixin, View):
+    def post(self, request):
+        try:
+            delete_active_session(request.user)
+            return JsonResponse({"status": "cancelled"})
         except TimerPersistenceError as e:
             return JsonResponse({"error": str(e)}, status=400)
         except Exception as e:

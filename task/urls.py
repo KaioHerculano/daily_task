@@ -13,6 +13,7 @@ urlpatterns = [
     path("session/pause/", views.PauseSessionView.as_view(), name="pause_session"),
     path("session/resume/", views.ResumeSessionView.as_view(), name="resume_session"),
     path("session/stop/", views.StopSessionView.as_view(), name="stop_session"),
+    path("session/cancel/", views.CancelSessionView.as_view(), name="cancel_session"),
     path("session/widget/", views.TimerWidgetView.as_view(), name="timer_widget"),
     path("subject/create/", views.SubjectCreateView.as_view(), name="create_subject"),
     path(
