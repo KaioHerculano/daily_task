@@ -20,6 +20,9 @@
                     <button class="btn btn-outline-danger flex-fill ms-2" @click="stopSession" :disabled="loading">
                         <i class="bi bi-stop-fill"></i> Parar
                     </button>
+                    <button class="btn btn-outline-secondary flex-fill ms-2" @click="cancelSession" :disabled="loading" title="Apagar medição (esqueci ligado)">
+                        <i class="bi bi-trash-fill"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -167,6 +170,13 @@
                     learning_note: this.learningNote,
                     next_step: this.nextStep
                 });
+            },
+
+            cancelSession() {
+                if (confirm("Tem certeza que deseja apagar esta sessão e perder o tempo medido?")) {
+                    this.stopTick();
+                    this.sendAction("{% url 'cancel_session' %}");
+                }
             }
         }));
     });
