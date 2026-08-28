@@ -65,11 +65,18 @@ def build_insight_prompt(user, payload, week_start, week_end):
 
 
 def generate_insight_json(prompt):
+    system_prompt = (
+        "Responda apenas com JSON válido no schema solicitado. "
+        "Seja objetivo e analítico, sem floreios. "
+        "Não invente problemas nem 'encha linguiça'. "
+        "Se não houver problemas, gargalos ou riscos estruturais reais identificados na semana, "
+        "você DEVE retornar o campo 'risks' estritamente como uma string vazia ('')."
+    )
     return get_ai_provider().generate_json(
         [
             {
                 "role": "system",
-                "content": "Responda apenas com JSON válido no schema solicitado.",
+                "content": system_prompt,
             },
             {"role": "user", "content": prompt},
         ]
