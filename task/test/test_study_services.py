@@ -9,7 +9,6 @@ from task.exceptions import (
     JournalValidationError,
     SessionNotActiveError,
 )
-)
 from task.models import StudySession, Subject, TaskDay, Topic
 from task.study_services import (
     pause_session,
