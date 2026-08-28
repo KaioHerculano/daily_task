@@ -146,6 +146,26 @@ def stop_session(
     return session
 
 
+def delete_active_session(user):
+    with transaction.atomic():
+        session = (
+            StudySession.objects.select_for_update()
+            .filter(
+                user=user,
+                status__in=[
+                    StudySession.Status.IN_PROGRESS,
+                    StudySession.Status.PAUSED,
+                ],
+            )
+            .first()
+        )
+
+        if not session:
+            raise SessionNotActiveError("No active session found.")
+
+        session.delete()
+
+
 def delete_topic(user, topic_id):
     topic = Topic.objects.filter(id=topic_id, subject__user=user).first()
     if not topic:

@@ -139,3 +139,14 @@ class StudyServicesTest(TestCase):
         session.refresh_from_db()
         self.assertEqual(session.status, StudySession.Status.IN_PROGRESS)
         self.assertIsNone(session.end_time)
+
+    def test_delete_active_session(self):
+        session = start_session(self.user, self.topic.id, "Test Objective")
+        from task.study_services import delete_active_session
+        delete_active_session(self.user)
+        self.assertFalse(StudySession.objects.filter(id=session.id).exists())
+
+    def test_delete_active_session_fails_if_not_active(self):
+        from task.study_services import delete_active_session
+        with self.assertRaises(SessionNotActiveError):
+            delete_active_session(self.user)
