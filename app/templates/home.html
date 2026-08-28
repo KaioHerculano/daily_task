@@ -249,10 +249,14 @@
     .lg\:tw-flex-row { flex-direction: row; }
     .lg\:tw-items-end { align-items: flex-end; }
     .lg\:tw-justify-between { justify-content: space-between; }
+    .lg\:tw-grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .lg\:tw-grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
 
   @media (min-width: 1280px) {
     .xl\:tw-grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .xl\:tw-grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .xl\:tw-grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .xl\:tw-grid-cols-12 { grid-template-columns: repeat(12, minmax(0, 1fr)); }
     .xl\:tw-col-span-8 { grid-column: span 8 / span 8; }
     .xl\:tw-col-span-7 { grid-column: span 7 / span 7; }
@@ -349,35 +353,35 @@
         {% if latest_insight %}
           <div class="tw-mt-5 tw-flex tw-flex-col tw-gap-4">
             <div class="tw-rounded-lg tw-bg-blue-50 tw-p-4 tw-border tw-border-blue-100">
-              <p class="tw-text-xs tw-font-medium tw-text-blue-700">Visão Geral</p>
+              <p class="tw-text-xs tw-font-medium tw-text-blue-600">Visão Geral</p>
               <p class="tw-mt-2 tw-text-sm tw-text-slate-900">{{ latest_insight.summary }}</p>
             </div>
             
-            <div class="tw-grid tw-grid-cols-1 tw-gap-4 {% if latest_insight.risks %}lg:tw-grid-cols-3{% else %}lg:tw-grid-cols-2{% endif %}">
+            <div class="tw-grid tw-grid-cols-1 tw-gap-4 {% if latest_insight.risks %}lg:tw-grid-cols-3 xl:tw-grid-cols-3{% else %}lg:tw-grid-cols-2 xl:tw-grid-cols-2{% endif %}">
               <div class="tw-rounded-lg tw-bg-slate-100 tw-p-4 tw-border tw-border-slate-200">
                 <div class="tw-flex tw-items-center tw-gap-2">
-                  <i class="bi bi-star-fill tw-text-amber-700 tw-text-xs"></i>
-                  <p class="tw-text-xs tw-font-medium tw-text-slate-600">Pontos Fortes</p>
+                  <i class="bi bi-star-fill tw-text-amber-700 tw-text-xs tw-flex tw-items-center"></i>
+                  <p class="tw-text-xs tw-font-medium tw-text-slate-500">Pontos Fortes</p>
                 </div>
-                <p class="tw-mt-2 tw-text-sm tw-text-slate-700">{{ latest_insight.strengths|default:"Sem pontos fortes registrados ainda." }}</p>
+                <p class="tw-mt-2 tw-text-sm tw-text-slate-500">{{ latest_insight.strengths|default:"Sem pontos fortes registrados ainda." }}</p>
               </div>
               
               {% if latest_insight.risks %}
-              <div class="tw-rounded-lg tw-bg-red-50 tw-p-4 tw-border tw-border-slate-200" style="border-color: rgba(220, 38, 38, 0.2);">
+              <div class="tw-rounded-lg tw-bg-red-50 tw-p-4 tw-border tw-border-slate-200">
                 <div class="tw-flex tw-items-center tw-gap-2">
-                  <i class="bi bi-exclamation-triangle-fill" style="color: #dc2626; font-size: 0.75rem;"></i>
-                  <p class="tw-text-xs tw-font-medium" style="color: #b91c1c;">Atenção</p>
+                  <i class="bi bi-exclamation-triangle-fill tw-text-xs tw-flex tw-items-center" style="color: var(--dt-amber-text);"></i>
+                  <p class="tw-text-xs tw-font-medium tw-text-slate-500">Atenção</p>
                 </div>
-                <p class="tw-mt-2 tw-text-sm tw-text-slate-700">{{ latest_insight.risks }}</p>
+                <p class="tw-mt-2 tw-text-sm tw-text-slate-500">{{ latest_insight.risks }}</p>
               </div>
               {% endif %}
 
               <div class="tw-rounded-lg tw-bg-slate-100 tw-p-4 tw-border tw-border-slate-200">
                 <div class="tw-flex tw-items-center tw-gap-2">
-                  <i class="bi bi-arrow-right-circle-fill tw-text-blue-600 tw-text-xs"></i>
-                  <p class="tw-text-xs tw-font-medium tw-text-slate-600">Próximos Passos</p>
+                  <i class="bi bi-arrow-right-circle-fill tw-text-blue-600 tw-text-xs tw-flex tw-items-center"></i>
+                  <p class="tw-text-xs tw-font-medium tw-text-slate-500">Próximos Passos</p>
                 </div>
-                <p class="tw-mt-2 tw-text-sm tw-text-slate-700">{{ latest_insight.next_actions|default:"Sem próximos passos registrados ainda." }}</p>
+                <p class="tw-mt-2 tw-text-sm tw-text-slate-500">{{ latest_insight.next_actions|default:"Sem próximos passos registrados ainda." }}</p>
               </div>
             </div>
           </div>
