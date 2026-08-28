@@ -8,7 +8,7 @@ from .exceptions import (
     JournalValidationError,
     SessionNotActiveError,
 )
-from .models import SessionPause, StudySession, Subject, Topic
+from .models import SessionPause, StudySession, Subject, TaskDay, Topic
 
 
 def start_session(user, topic_id, objective_text="", mode=StudySession.Mode.FREE):
@@ -143,7 +143,30 @@ def stop_session(
         session.objective_result = objective_result
         session.learning_note = learning_note
         session.next_step = next_step
+
+        TaskDay.objects.get_or_create(user=user, date=timezone.localdate())
+
     return session
+
+
+def delete_active_session(user):
+    with transaction.atomic():
+        session = (
+            StudySession.objects.select_for_update()
+            .filter(
+                user=user,
+                status__in=[
+                    StudySession.Status.IN_PROGRESS,
+                    StudySession.Status.PAUSED,
+                ],
+            )
+            .first()
+        )
+
+        if not session:
+            raise SessionNotActiveError("No active session found.")
+
+        session.delete()
 
 
 def delete_topic(user, topic_id):
