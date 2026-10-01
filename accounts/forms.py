@@ -22,17 +22,40 @@ class UserUpdateForm(forms.ModelForm):
         fields = ["username", "email"]
 
 
+from .models import UserProfile
+
+
 class UserProfileForm(forms.ModelForm):
     class Meta:
-        from .models import UserProfile
-
         model = UserProfile
         fields = [
-            "timezone",
-            "weekly_goal_hours",
-            "preferred_study_time",
             "weekly_goal",
+            "weekly_goal_hours",
+            "daily_study_minutes_weekday",
+            "daily_study_minutes_weekend",
+            "preferred_study_time",
+            "timezone",
         ]
+        labels = {
+            "weekly_goal": "Meta Semanal (dias)",
+            "weekly_goal_hours": "Meta Semanal (horas totais)",
+            "daily_study_minutes_weekday": "Meta Diária - Dias Úteis (minutos)",
+            "daily_study_minutes_weekend": "Meta Diária - Fim de Semana (minutos)",
+            "preferred_study_time": "Horário Preferido de Estudo",
+            "timezone": "Fuso Horário",
+        }
+        widgets = {
+            "weekly_goal": forms.NumberInput(attrs={"class": "form-control"}),
+            "weekly_goal_hours": forms.NumberInput(attrs={"class": "form-control"}),
+            "daily_study_minutes_weekday": forms.NumberInput(
+                attrs={"class": "form-control"}
+            ),
+            "daily_study_minutes_weekend": forms.NumberInput(
+                attrs={"class": "form-control"}
+            ),
+            "preferred_study_time": forms.Select(attrs={"class": "form-select"}),
+            "timezone": forms.TextInput(attrs={"class": "form-control"}),
+        }
 
 
 class AsyncPasswordResetForm(PasswordResetForm):

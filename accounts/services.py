@@ -1,17 +1,19 @@
 from django.contrib.auth.models import User
 
+ALLOWED_PROFILE_FIELDS = {
+    "timezone",
+    "weekly_goal_hours",
+    "daily_study_minutes_weekday",
+    "daily_study_minutes_weekend",
+    "preferred_study_time",
+    "weekly_goal",
+}
+
 
 def update_user_profile(user: User, data: dict):
     profile = user.profile
-
-    if "timezone" in data:
-        profile.timezone = data["timezone"]
-    if "weekly_goal_hours" in data:
-        profile.weekly_goal_hours = data["weekly_goal_hours"]
-    if "preferred_study_time" in data:
-        profile.preferred_study_time = data["preferred_study_time"]
-    if "weekly_goal" in data:
-        profile.weekly_goal = data["weekly_goal"]
-
+    for field, value in data.items():
+        if field in ALLOWED_PROFILE_FIELDS:
+            setattr(profile, field, value)
     profile.save()
     return profile

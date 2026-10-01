@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 
@@ -13,6 +14,16 @@ class UserProfile(models.Model):
         default=5, verbose_name="Meta Semanal (dias)"
     )
     weekly_goal_hours = models.PositiveIntegerField(default=10)
+    daily_study_minutes_weekday = models.PositiveIntegerField(
+        default=60,
+        validators=[MinValueValidator(15), MaxValueValidator(1440)],
+        verbose_name="Tempo Diário Dias Úteis (minutos)",
+    )
+    daily_study_minutes_weekend = models.PositiveIntegerField(
+        default=60,
+        validators=[MinValueValidator(0), MaxValueValidator(1440)],
+        verbose_name="Tempo Diário Fim de Semana (minutos)",
+    )
     timezone = models.CharField(max_length=50, default="UTC")
     preferred_study_time = models.CharField(
         max_length=10,
