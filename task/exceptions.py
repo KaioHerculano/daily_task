@@ -20,3 +20,8 @@ class InvalidTopicError(TimerPersistenceError):
 
 class JournalValidationError(TimerPersistenceError):
     pass
+
+
+class InvalidPlanItemError(TimerPersistenceError):
+    pass
+
