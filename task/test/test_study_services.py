@@ -15,6 +15,7 @@ from task.study_services import (
     resume_session,
     start_session,
     stop_session,
+    update_topic,
 )
 
 fake = Faker()
@@ -156,3 +157,30 @@ class StudyServicesTest(TestCase):
         from task.study_services import delete_active_session
         with self.assertRaises(SessionNotActiveError):
             delete_active_session(self.user)
+
+    def test_update_topic_success(self):
+        updated = update_topic(self.user, self.topic.id, "New Name", "HIGH")
+        self.assertEqual(updated.name, "New Name")
+        self.assertEqual(updated.priority, Topic.Priority.HIGH)
+        self.topic.refresh_from_db()
+        self.assertEqual(self.topic.name, "New Name")
+        self.assertEqual(self.topic.priority, Topic.Priority.HIGH)
+
+    def test_update_topic_fails_for_other_user(self):
+        other_user = User.objects.create_user(
+            username=fake.user_name(), email=fake.email(), password=fake.password()
+        )
+        with self.assertRaises(InvalidTopicError):
+            update_topic(other_user, self.topic.id, "Hacked Name")
+
+    def test_update_topic_fails_for_empty_name(self):
+        with self.assertRaises(JournalValidationError):
+            update_topic(self.user, self.topic.id, "   ")
+
+    def test_update_topic_fails_for_invalid_priority(self):
+        with self.assertRaises(JournalValidationError):
+            update_topic(self.user, self.topic.id, "Valid Name", "UNKNOWN")
+
+    def test_update_topic_fails_if_not_found(self):
+        with self.assertRaises(InvalidTopicError):
+            update_topic(self.user, 999999, "Valid Name")

@@ -64,3 +64,10 @@ class StudyDomainModelsTest(TestCase):
         gross = session.gross_time.total_seconds()
         self.assertGreaterEqual(gross, 1800)
         self.assertLess(gross, 1805)
+
+    def test_topic_priority_default_and_choices(self):
+        self.assertEqual(self.topic.priority, Topic.Priority.MEDIUM)
+        self.topic.priority = Topic.Priority.HIGH
+        self.topic.save()
+        self.assertEqual(self.topic.priority, "HIGH")
+        self.assertEqual(self.topic.get_priority_display(), "Extremamente Importante")
