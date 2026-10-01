@@ -77,9 +77,18 @@ class TopicForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
+        if "priority" in self.fields:
+            self.fields["priority"].required = False
+            self.fields["priority"].initial = Topic.Priority.MEDIUM
         if user:
             self.fields["subject"].queryset = Subject.objects.filter(
                 user=user,
                 is_active=True,
                 completed_at__isnull=True,
             )
+
+    def clean_priority(self):
+        priority = self.cleaned_data.get("priority")
+        if not priority:
+            return Topic.Priority.MEDIUM
+        return priority

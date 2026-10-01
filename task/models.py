@@ -70,6 +70,7 @@ class Topic(models.Model):
         max_length=10,
         choices=Priority.choices,
         default=Priority.MEDIUM,
+        blank=True,
         db_index=True,
     )
     is_active = models.BooleanField(default=True)
