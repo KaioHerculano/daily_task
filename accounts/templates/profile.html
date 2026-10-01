@@ -26,6 +26,7 @@
         <form method="post">
           {% csrf_token %}
 
+          <h5 class="fw-semibold text-body-secondary mb-3">Informações da Conta</h5>
           {% for field in form %}
             <div class="mb-3">
               <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
@@ -36,6 +37,22 @@
                 id="{{ field.id_for_label }}"
                 value="{{ field.value|default:'' }}"
               >
+              {% for error in field.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+              {% endfor %}
+            </div>
+          {% endfor %}
+
+          <hr class="my-4">
+
+          <h5 class="fw-semibold text-body-secondary mb-3">Metas e Disponibilidade de Estudo</h5>
+          {% for field in profile_form %}
+            <div class="mb-3">
+              <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+              {{ field }}
+              {% if field.help_text %}
+                <div class="form-text">{{ field.help_text }}</div>
+              {% endif %}
               {% for error in field.errors %}
                 <div class="text-danger small mt-1">{{ error }}</div>
               {% endfor %}

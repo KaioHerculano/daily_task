@@ -36,6 +36,14 @@ class UserProfileForm(forms.ModelForm):
             "preferred_study_time",
             "timezone",
         ]
+        labels = {
+            "weekly_goal": "Meta Semanal (dias)",
+            "weekly_goal_hours": "Meta Semanal (horas totais)",
+            "daily_study_minutes_weekday": "Meta Diária - Dias Úteis (minutos)",
+            "daily_study_minutes_weekend": "Meta Diária - Fim de Semana (minutos)",
+            "preferred_study_time": "Horário Preferido de Estudo",
+            "timezone": "Fuso Horário",
+        }
         widgets = {
             "weekly_goal": forms.NumberInput(attrs={"class": "form-control"}),
             "weekly_goal_hours": forms.NumberInput(attrs={"class": "form-control"}),
