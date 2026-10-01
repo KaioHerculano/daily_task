@@ -21,6 +21,7 @@ from .study_services import (
     resume_session,
     start_session,
     stop_session,
+    update_topic,
 )
 
 
@@ -226,6 +227,18 @@ class TopicCompleteView(LoginRequiredMixin, View):
                 request.POST.get("completion_summary", ""),
             )
             messages.success(request, "Tópico finalizado com sucesso.")
+        except TimerPersistenceError as e:
+            messages.error(request, str(e))
+        return redirect("dashboard")
+
+
+class TopicUpdateView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        name = request.POST.get("name", "")
+        priority = request.POST.get("priority", "")
+        try:
+            update_topic(request.user, pk, name, priority)
+            messages.success(request, "Tópico atualizado com sucesso!")
         except TimerPersistenceError as e:
             messages.error(request, str(e))
         return redirect("dashboard")
