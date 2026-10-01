@@ -229,6 +229,32 @@ def complete_topic(user, topic_id, completion_summary):
     return topic
 
 
+def update_topic(user, topic_id, name, priority=None):
+    name = name.strip()
+    if not name:
+        raise JournalValidationError("Topic name is required.")
+
+    topic = Topic.objects.filter(
+        id=topic_id,
+        subject__user=user,
+        is_active=True,
+    ).first()
+    if not topic:
+        raise InvalidTopicError("Topic not found.")
+
+    update_fields = {"name": name}
+    if priority:
+        if priority not in Topic.Priority.values:
+            raise JournalValidationError("Invalid priority.")
+        update_fields["priority"] = priority
+
+    Topic.objects.filter(pk=topic.pk).update(**update_fields)
+    topic.name = name
+    if priority:
+        topic.priority = priority
+    return topic
+
+
 def complete_subject(user, subject_id, completion_summary):
     completion_summary = completion_summary.strip()
     if not completion_summary:

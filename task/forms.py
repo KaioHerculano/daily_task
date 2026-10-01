@@ -65,12 +65,13 @@ class SubjectForm(forms.ModelForm):
 class TopicForm(forms.ModelForm):
     class Meta:
         model = Topic
-        fields = ["subject", "name"]
+        fields = ["subject", "name", "priority"]
         widgets = {
             "subject": forms.Select(attrs={"class": "form-select"}),
             "name": forms.TextInput(
                 attrs={"class": "form-control", "placeholder": "Nome do Tópico"}
             ),
+            "priority": forms.Select(attrs={"class": "form-select"}),
         }
 
     def __init__(self, *args, **kwargs):
