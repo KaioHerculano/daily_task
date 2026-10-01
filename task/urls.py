@@ -28,6 +28,11 @@ urlpatterns = [
     ),
     path("topic/create/", views.TopicCreateView.as_view(), name="create_topic"),
     path(
+        "topic/<int:pk>/update/",
+        views.TopicUpdateView.as_view(),
+        name="update_topic",
+    ),
+    path(
         "topic/<int:pk>/delete/",
         views.TopicDeleteView.as_view(),
         name="delete_topic",

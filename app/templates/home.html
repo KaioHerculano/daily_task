@@ -471,8 +471,21 @@
                   <div class="tw-divide-y tw-divide-slate-200">
                     {% for topic in subject.topics.all %}
                       <div class="tw-flex tw-items-center tw-justify-between tw-gap-3 tw-px-4 tw-py-3">
-                        <span class="tw-truncate tw-text-sm tw-text-slate-600">{{ topic.name }}</span>
+                        <div class="tw-flex tw-items-center tw-gap-2 tw-truncate">
+                          <span class="tw-truncate tw-text-sm tw-text-slate-600">{{ topic.name }}</span>
+                          {% if topic.priority == "HIGH" %}
+                            <span class="badge bg-danger">Alta</span>
+                          {% elif topic.priority == "MEDIUM" %}
+                            <span class="badge bg-warning text-dark">Média</span>
+                          {% elif topic.priority == "LOW" %}
+                            <span class="badge bg-secondary">Baixa</span>
+                          {% endif %}
+                        </div>
                         <div class="tw-flex tw-shrink-0 tw-items-center tw-gap-2">
+                          <button type="button" class="study-icon-button study-icon-button-circle" title="Editar tópico" aria-label="Editar tópico" data-bs-toggle="modal" data-bs-target="#editTopicModal{{ topic.id }}">
+                            <i class="bi bi-pencil"></i>
+                            <span class="tw-sr-only">Editar tópico</span>
+                          </button>
                           <form method="post" action="{% url 'delete_topic' topic.id %}">
                             {% csrf_token %}
                             <button type="submit" class="study-icon-button study-icon-button-circle" title="Excluir tópico" aria-label="Excluir Tópico">
@@ -640,6 +653,37 @@
               <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="submit" class="btn btn-primary">Finalizar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="modal fade" id="editTopicModal{{ topic.id }}" tabindex="-1" aria-labelledby="editTopicModalLabel{{ topic.id }}" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <form method="post" action="{% url 'update_topic' topic.id %}">
+              {% csrf_token %}
+              <div class="modal-header">
+                <h5 class="modal-title" id="editTopicModalLabel{{ topic.id }}">Editar tópico</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <div class="mb-3">
+                  <label for="topicName{{ topic.id }}" class="form-label">Nome do tópico</label>
+                  <input type="text" id="topicName{{ topic.id }}" name="name" class="form-control" value="{{ topic.name }}" required>
+                </div>
+                <div class="mb-3">
+                  <label for="topicPriority{{ topic.id }}" class="form-label">Prioridade</label>
+                  <select id="topicPriority{{ topic.id }}" name="priority" class="form-select">
+                    <option value="HIGH" {% if topic.priority == "HIGH" %}selected{% endif %}>Extremamente Importante</option>
+                    <option value="MEDIUM" {% if topic.priority == "MEDIUM" %}selected{% endif %}>Média Importância</option>
+                    <option value="LOW" {% if topic.priority == "LOW" %}selected{% endif %}>Baixa Importância</option>
+                  </select>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Salvar</button>
               </div>
             </form>
           </div>

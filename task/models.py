@@ -56,10 +56,23 @@ class Subject(models.Model):
 
 
 class Topic(models.Model):
+
+    class Priority(models.TextChoices):
+        HIGH = ("HIGH", "Extremamente Importante")
+        MEDIUM = ("MEDIUM", "Média Importância")
+        LOW = ("LOW", "Baixa Importância")
+
     subject = models.ForeignKey(
         Subject, on_delete=models.CASCADE, related_name="topics"
     )
     name = models.CharField(max_length=100)
+    priority = models.CharField(
+        max_length=10,
+        choices=Priority.choices,
+        default=Priority.MEDIUM,
+        blank=True,
+        db_index=True,
+    )
     is_active = models.BooleanField(default=True)
     completed_at = models.DateTimeField(null=True, blank=True)
     completion_summary = models.TextField(blank=True)

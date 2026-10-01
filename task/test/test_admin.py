@@ -30,3 +30,9 @@ class AdminRegistrationTest(TestCase):
                 admin.site._registry,
                 f"Model {model.__name__} is not registered in admin.",
             )
+
+    def test_topic_admin_priority_fields(self):
+        topic_admin = admin.site._registry[Topic]
+        self.assertIn("priority", topic_admin.list_display)
+        self.assertIn("priority", topic_admin.list_filter)
+        self.assertIn("priority", topic_admin.list_editable)

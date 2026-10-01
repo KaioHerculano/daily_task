@@ -65,20 +65,30 @@ class SubjectForm(forms.ModelForm):
 class TopicForm(forms.ModelForm):
     class Meta:
         model = Topic
-        fields = ["subject", "name"]
+        fields = ["subject", "name", "priority"]
         widgets = {
             "subject": forms.Select(attrs={"class": "form-select"}),
             "name": forms.TextInput(
                 attrs={"class": "form-control", "placeholder": "Nome do Tópico"}
             ),
+            "priority": forms.Select(attrs={"class": "form-select"}),
         }
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
+        if "priority" in self.fields:
+            self.fields["priority"].required = False
+            self.fields["priority"].initial = Topic.Priority.MEDIUM
         if user:
             self.fields["subject"].queryset = Subject.objects.filter(
                 user=user,
                 is_active=True,
                 completed_at__isnull=True,
             )
+
+    def clean_priority(self):
+        priority = self.cleaned_data.get("priority")
+        if not priority:
+            return Topic.Priority.MEDIUM
+        return priority
