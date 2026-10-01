@@ -173,3 +173,63 @@ class StudyInsight(models.Model):
 
     def __str__(self):
         return f"Insight {self.user.username} {self.week_start}"
+
+
+class WeeklyPlan(models.Model):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="weekly_plans"
+    )
+    week_start = models.DateField()
+    week_end = models.DateField()
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        unique_together = ("user", "week_start")
+        ordering = ["-week_start"]
+        indexes = [
+            models.Index(fields=["user", "week_start"]),
+        ]
+
+    def __str__(self):
+        return f"WeeklyPlan {self.user.username} ({self.week_start} - {self.week_end})"
+
+
+class WeeklyPlanItem(models.Model):
+
+    class DayOfWeek(models.IntegerChoices):
+        MONDAY = 0, "Segunda-feira"
+        TUESDAY = 1, "Terça-feira"
+        WEDNESDAY = 2, "Quarta-feira"
+        THURSDAY = 3, "Quinta-feira"
+        FRIDAY = 4, "Sexta-feira"
+        SATURDAY = 5, "Sábado"
+        SUNDAY = 6, "Domingo"
+
+    plan = models.ForeignKey(
+        WeeklyPlan, on_delete=models.CASCADE, related_name="items"
+    )
+    day_of_week = models.PositiveSmallIntegerField(
+        choices=DayOfWeek.choices,
+        validators=[MinValueValidator(0), MaxValueValidator(6)],
+    )
+    topic = models.ForeignKey(
+        Topic, on_delete=models.CASCADE, related_name="weekly_plan_items"
+    )
+    duration_minutes = models.PositiveIntegerField(
+        default=60,
+        validators=[MinValueValidator(15), MaxValueValidator(1440)],
+    )
+    is_completed = models.BooleanField(default=False, db_index=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["day_of_week", "order", "id"]
+        indexes = [
+            models.Index(fields=["plan", "day_of_week", "order"]),
+            models.Index(fields=["plan", "is_completed"]),
+        ]
+
+    def __str__(self):
+        return f"{self.plan.user.username} - {self.get_day_of_week_display()} - {self.topic.name}"
+

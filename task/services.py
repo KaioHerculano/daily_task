@@ -2,11 +2,22 @@ from calendar import month_abbr, monthrange
 from datetime import date, timedelta
 
 from dateutil.relativedelta import relativedelta
+from django.db import transaction
 from django.db.models import DurationField, ExpressionWrapper, F, Max, Prefetch, Q, Sum
 from django.db.models.functions import TruncDate
 from django.utils import timezone
 
-from .models import SessionPause, StudyInsight, StudySession, Subject, TaskDay, Topic
+from .exceptions import InvalidPlanItemError
+from .models import (
+    SessionPause,
+    StudyInsight,
+    StudySession,
+    Subject,
+    TaskDay,
+    Topic,
+    WeeklyPlan,
+    WeeklyPlanItem,
+)
 
 
 def format_duration_hours(value):
@@ -297,3 +308,69 @@ def get_completed_studies_context(user):
             status=StudySession.Status.COMPLETED,
         ).count(),
     }
+
+
+def toggle_plan_item_status(user, item_id):
+    with transaction.atomic():
+        item = (
+            WeeklyPlanItem.objects.select_for_update()
+            .filter(id=item_id, plan__user=user)
+            .first()
+        )
+        if not item:
+            raise InvalidPlanItemError("Weekly plan item not found.")
+
+        if item.is_completed:
+            item.is_completed = False
+            item.completed_at = None
+        else:
+            item.is_completed = True
+            item.completed_at = timezone.now()
+
+        item.save(update_fields=["is_completed", "completed_at"])
+        return item
+
+
+def get_current_week_plan(user, reference_date=None):
+    if reference_date is None:
+        reference_date = timezone.localdate()
+    elif hasattr(reference_date, "date"):
+        reference_date = reference_date.date()
+
+    week_start = reference_date - timedelta(days=reference_date.weekday())
+    return (
+        WeeklyPlan.objects.filter(user=user, week_start=week_start)
+        .prefetch_related(
+            Prefetch(
+                "items",
+                queryset=WeeklyPlanItem.objects.select_related(
+                    "topic__subject"
+                ).order_by("day_of_week", "order", "id"),
+            )
+        )
+        .first()
+    )
+
+
+def create_weekly_plan(user, week_start, items_data=None):
+    week_end = week_start + timedelta(days=6)
+    with transaction.atomic():
+        plan, _ = WeeklyPlan.objects.get_or_create(
+            user=user,
+            week_start=week_start,
+            defaults={"week_end": week_end},
+        )
+        if items_data:
+            items = [
+                WeeklyPlanItem(
+                    plan=plan,
+                    day_of_week=item["day_of_week"],
+                    topic=item["topic"],
+                    duration_minutes=item.get("duration_minutes", 60),
+                    order=item.get("order", 0),
+                )
+                for item in items_data
+            ]
+            WeeklyPlanItem.objects.bulk_create(items)
+        return plan
+
