@@ -235,14 +235,17 @@ class WeeklyPlanServicesTest(TestCase):
         self.assertIsNone(plan)
 
     def test_get_current_week_plan_default_reference_date(self):
+        dedicated_user = User.objects.create_user(
+            username="dedicated_plan_user", password="password"
+        )
         today = timezone.localdate()
         today_start = today - timedelta(days=today.weekday())
         current_plan = WeeklyPlan.objects.create(
-            user=self.user,
+            user=dedicated_user,
             week_start=today_start,
             week_end=today_start + timedelta(days=6),
         )
-        plan = get_current_week_plan(self.user)
+        plan = get_current_week_plan(dedicated_user)
         self.assertIsNotNone(plan)
         self.assertEqual(plan.id, current_plan.id)
 
@@ -267,3 +270,45 @@ class WeeklyPlanServicesTest(TestCase):
         self.assertEqual(created.week_start, target_start)
         self.assertEqual(created.week_end, target_start + timedelta(days=6))
         self.assertEqual(created.items.count(), 2)
+
+    def test_format_duration_minutes(self):
+        from task.services import format_duration_minutes
+
+        self.assertEqual(format_duration_minutes(0), "0min")
+        self.assertEqual(format_duration_minutes(45), "45min")
+        self.assertEqual(format_duration_minutes(60), "1h")
+        self.assertEqual(format_duration_minutes(75), "1h15min")
+        self.assertEqual(format_duration_minutes(125), "2h05min")
+
+    def test_get_weekly_plan_context_with_plan(self):
+        from task.services import get_weekly_plan_context
+
+        context = get_weekly_plan_context(self.user, reference_date=self.week_start)
+        self.assertEqual(context["weekly_plan"], self.plan)
+        self.assertEqual(len(context["weekly_plan_days"]), 7)
+        self.assertEqual(context["weekly_plan_total_planned_minutes"], 45)
+        self.assertEqual(context["weekly_plan_total_completed_minutes"], 0)
+        self.assertEqual(context["weekly_plan_completion_percentage"], 0)
+        self.assertEqual(context["weekly_plan_total_planned_label"], "45min")
+        self.assertEqual(context["weekly_plan_total_completed_label"], "0min")
+        self.assertEqual(context["weekly_plan_total_items"], 1)
+        self.assertEqual(context["weekly_plan_completed_items"], 0)
+
+        monday_data = context["weekly_plan_days"][0]
+        self.assertEqual(monday_data["day_name"], "Segunda-feira")
+        self.assertEqual(monday_data["planned_minutes"], 45)
+        self.assertEqual(len(monday_data["items"]), 1)
+
+    def test_get_weekly_plan_context_without_plan(self):
+        from task.services import get_weekly_plan_context
+
+        no_plan_user = User.objects.create_user(
+            username="no_plan_user", password="password"
+        )
+        context = get_weekly_plan_context(no_plan_user)
+        self.assertIsNone(context["weekly_plan"])
+        self.assertEqual(len(context["weekly_plan_days"]), 7)
+        self.assertEqual(context["weekly_plan_total_planned_minutes"], 0)
+        self.assertEqual(context["weekly_plan_total_completed_minutes"], 0)
+        self.assertEqual(context["weekly_plan_completion_percentage"], 0)
+
