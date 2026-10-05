@@ -7,17 +7,55 @@ from django.test import TestCase, override_settings
 from django.utils import timezone
 
 from task.ai_services import (
+    PlannerContext,
     build_deterministic_weekly_plan,
+    build_planner_context,
     can_reuse_previous_plan,
     generate_weekly_plan_with_ai,
     get_user_pending_topics,
+    persist_weekly_plan,
     replicate_weekly_plan,
+    try_generate_with_ai,
+    try_reuse_previous_plan,
 )
 from task.models import Subject, Topic, WeeklyPlan, WeeklyPlanItem
 from task.prompts.weekly_planner import (
+    PlannedItemDTO,
     build_weekly_planner_prompt,
     validate_weekly_planner_response,
 )
+
+
+class PlannedItemDTOTest(TestCase):
+
+    def test_parse_valid_dict(self):
+        item = PlannedItemDTO.parse(
+            {"day_of_week": 2, "topic_id": 5, "duration_minutes": 45, "order": 1},
+            valid_topic_ids={5},
+        )
+        self.assertIsNotNone(item)
+        self.assertEqual(item.day_of_week, 2)
+        self.assertEqual(item.topic_id, 5)
+        self.assertEqual(item.duration_minutes, 45)
+        self.assertEqual(item.order, 1)
+
+    def test_parse_invalid_types_or_values(self):
+        self.assertIsNone(PlannedItemDTO.parse("not_a_dict", {5}))
+        self.assertIsNone(
+            PlannedItemDTO.parse(
+                {"day_of_week": 7, "topic_id": 5, "duration_minutes": 60}, {5}
+            )
+        )
+        self.assertIsNone(
+            PlannedItemDTO.parse(
+                {"day_of_week": 0, "topic_id": 99, "duration_minutes": 60}, {5}
+            )
+        )
+        self.assertIsNone(
+            PlannedItemDTO.parse(
+                {"day_of_week": 0, "topic_id": 5, "duration_minutes": 10}, {5}
+            )
+        )
 
 
 class WeeklyPlannerPromptTest(TestCase):
@@ -92,22 +130,10 @@ class WeeklyPlannerPromptTest(TestCase):
         with self.assertRaises(ValueError):
             validate_weekly_planner_response({"plan": []}, {10})
 
-    def test_validate_weekly_planner_response_invalid_fields(self):
+    def test_validate_weekly_planner_response_no_valid_items(self):
         with self.assertRaises(ValueError):
             validate_weekly_planner_response(
-                {"plan": [{"day_of_week": 7, "topic_id": 10, "duration_minutes": 60}]},
-                {10},
-            )
-
-        with self.assertRaises(ValueError):
-            validate_weekly_planner_response(
-                {"plan": [{"day_of_week": 0, "topic_id": 999, "duration_minutes": 60}]},
-                {10},
-            )
-
-        with self.assertRaises(ValueError):
-            validate_weekly_planner_response(
-                {"plan": [{"day_of_week": 0, "topic_id": 10, "duration_minutes": 10}]},
+                {"plan": [{"day_of_week": 99, "topic_id": 10, "duration_minutes": 60}]},
                 {10},
             )
 
@@ -142,21 +168,32 @@ class WeeklyPlannerServiceTest(TestCase):
         self.assertEqual(len(topics), 1)
         self.assertEqual(topics[0].id, self.topic_high.id)
 
-    def test_build_deterministic_weekly_plan(self):
-        topics = [self.topic_high, self.topic_med]
-        items = build_deterministic_weekly_plan(topics, weekday_minutes=60, weekend_minutes=0)
-        self.assertEqual(len(items), 5)
-        for item in items:
-            self.assertLess(item["day_of_week"], 5)
-            self.assertEqual(item["duration_minutes"], 60)
+    def test_build_planner_context(self):
+        context = build_planner_context(self.user, self.week_start)
+        self.assertEqual(context.user, self.user)
+        self.assertEqual(context.week_start, self.week_start)
+        self.assertEqual(len(context.high_priority_topics), 1)
+        self.assertEqual(len(context.other_topics), 1)
+        self.assertTrue(context.has_topics)
+        self.assertEqual(context.valid_topic_ids, {self.topic_high.id, self.topic_med.id})
 
-    def test_build_deterministic_weekly_plan_splits_large_budget(self):
-        topics = [self.topic_high, self.topic_med]
-        items = build_deterministic_weekly_plan(topics, weekday_minutes=120, weekend_minutes=60)
-        monday_items = [item for item in items if item["day_of_week"] == 0]
-        self.assertEqual(len(monday_items), 2)
-        self.assertEqual(monday_items[0]["order"], 1)
-        self.assertEqual(monday_items[1]["order"], 2)
+    def test_build_deterministic_weekly_plan_allocates_high_priority_every_day(self):
+        context = build_planner_context(self.user, self.week_start)
+        items = build_deterministic_weekly_plan(context)
+        days_with_high = {
+            item["day_of_week"]
+            for item in items
+            if item["topic_id"] == self.topic_high.id
+        }
+        self.assertEqual(days_with_high, {0, 1, 2, 3, 4, 5, 6})
+
+    def test_build_deterministic_weekly_plan_allocates_other_topics_in_remaining_time(self):
+        context = build_planner_context(self.user, self.week_start)
+        items = build_deterministic_weekly_plan(context)
+        med_items = [
+            item for item in items if item["topic_id"] == self.topic_med.id
+        ]
+        self.assertGreater(len(med_items), 0)
 
     def test_can_reuse_previous_plan_true_when_topics_match(self):
         prev_start = self.week_start - timedelta(days=7)
@@ -217,6 +254,10 @@ class WeeklyPlannerServiceTest(TestCase):
         self.assertEqual(len(items), 1)
         self.assertFalse(items[0].is_completed)
         self.assertIsNone(items[0].completed_at)
+
+    def test_try_reuse_previous_plan_respects_force_refresh(self):
+        context = build_planner_context(self.user, self.week_start)
+        self.assertIsNone(try_reuse_previous_plan(context, force_refresh=True))
 
     def test_generate_weekly_plan_returns_none_when_no_topics(self):
         Topic.objects.all().delete()

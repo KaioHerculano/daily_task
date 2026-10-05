@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import json
 
 
@@ -6,13 +7,58 @@ WEEKLY_PLANNER_SYSTEM_PROMPT = (
     "Sua função é distribuir os tópicos de estudo de um aluno ao longo da semana "
     "(dias 0 a 6, onde 0 é Segunda-feira e 6 é Domingo). "
     "Diretrizes obrigatórias: "
-    "1. Priorize tópicos com prioridade 'HIGH', seguidos de 'MEDIUM' e 'LOW'. "
-    "2. Respeite os limites diários de estudo informados (dias úteis vs fins de semana). "
-    "3. Cada sessão de estudo deve ter no mínimo 15 minutos e duração múltipla de 15 minutos. "
-    "4. Distribua a carga de forma equilibrada, evitando sobrecarregar dias específicos. "
+    "1. Tópicos com prioridade 'HIGH' são matérias essenciais de revisão diária e DEVEM ser agendados em todos os dias de estudo disponíveis. "
+    "2. Tópicos com prioridade 'MEDIUM' e 'LOW' devem preencher o tempo restante de estudo de forma distribuída e balanceada. "
+    "3. Respeite estritamente o limite diário de minutos de estudo do aluno (dias úteis vs fins de semana). "
+    "4. Cada sessão de estudo deve ter no mínimo 15 minutos e duração múltipla de 15 minutos. "
     "5. Use apenas os IDs de tópicos fornecidos na lista. "
     "6. Responda estritamente com JSON válido conforme o schema solicitado."
 )
+
+
+@dataclass(frozen=True)
+class PlannedItemDTO:
+    day_of_week: int
+    topic_id: int
+    duration_minutes: int
+    order: int
+
+    @classmethod
+    def parse(cls, data, valid_topic_ids, fallback_order=1):
+        if not isinstance(data, dict):
+            return None
+
+        try:
+            day = int(data.get("day_of_week"))
+            topic_id = int(data.get("topic_id"))
+            duration = int(data.get("duration_minutes", 60))
+            order = int(data.get("order", fallback_order))
+        except (TypeError, ValueError):
+            return None
+
+        is_valid = (
+            0 <= day <= 6
+            and topic_id in valid_topic_ids
+            and 15 <= duration <= 1440
+            and order >= 0
+        )
+        if not is_valid:
+            return None
+
+        return cls(
+            day_of_week=day,
+            topic_id=topic_id,
+            duration_minutes=duration,
+            order=order or fallback_order,
+        )
+
+    def to_dict(self):
+        return {
+            "day_of_week": self.day_of_week,
+            "topic_id": self.topic_id,
+            "duration_minutes": self.duration_minutes,
+            "order": self.order,
+        }
 
 
 def build_weekly_planner_prompt(
@@ -56,52 +102,21 @@ def validate_weekly_planner_response(response_data, valid_topic_ids):
     if not isinstance(response_data, dict):
         raise ValueError("AI response must be a JSON object.")
 
-    plan_items = response_data.get("plan")
-    if not isinstance(plan_items, list):
-        raise ValueError("Response must contain a 'plan' list.")
+    raw_items = response_data.get("plan")
+    if not isinstance(raw_items, list) or not raw_items:
+        raise ValueError("Response must contain a non-empty 'plan' list.")
 
-    if not plan_items:
-        raise ValueError("Plan list cannot be empty.")
-
-    validated = []
-    seen_combinations = set()
-
-    for index, item in enumerate(plan_items):
-        if not isinstance(item, dict):
-            raise ValueError(f"Plan item at index {index} must be an object.")
-
-        day_of_week = item.get("day_of_week")
-        topic_id = item.get("topic_id")
-        duration = item.get("duration_minutes")
-        order = item.get("order", index + 1)
-
-        if not isinstance(day_of_week, int) or day_of_week < 0 or day_of_week > 6:
-            raise ValueError(f"Invalid day_of_week: {day_of_week}")
-
-        if not isinstance(topic_id, int) or topic_id not in valid_topic_ids:
-            raise ValueError(f"Invalid or unknown topic_id: {topic_id}")
-
-        if not isinstance(duration, int) or duration < 15 or duration > 1440:
-            raise ValueError(f"Invalid duration_minutes: {duration}")
-
-        if not isinstance(order, int) or order < 0:
-            order = index + 1
-
-        combo = (day_of_week, topic_id)
-        if combo in seen_combinations:
+    parsed_map = {}
+    for index, raw in enumerate(raw_items, start=1):
+        item = PlannedItemDTO.parse(raw, valid_topic_ids, fallback_order=index)
+        if not item:
             continue
-        seen_combinations.add(combo)
+        key = (item.day_of_week, item.topic_id)
+        if key not in parsed_map:
+            parsed_map[key] = item.to_dict()
 
-        validated.append(
-            {
-                "day_of_week": day_of_week,
-                "topic_id": topic_id,
-                "duration_minutes": duration,
-                "order": order,
-            }
-        )
+    if not parsed_map:
+        raise ValueError("No valid plan items found in AI response.")
 
-    if not validated:
-        raise ValueError("No valid plan items found after validation.")
+    return list(parsed_map.values())
 
-    return validated

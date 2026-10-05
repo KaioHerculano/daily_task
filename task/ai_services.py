@@ -1,5 +1,6 @@
+from dataclasses import dataclass
+from datetime import date, timedelta
 import json
-from datetime import timedelta
 
 from django.contrib.auth.models import User
 from django.db import models, transaction
@@ -148,9 +149,58 @@ def get_user_pending_topics(user):
     )
 
 
-def build_deterministic_weekly_plan(topics, weekday_minutes, weekend_minutes):
+@dataclass(frozen=True)
+class PlannerContext:
+    user: User
+    week_start: date
+    week_end: date
+    topics: list
+    high_priority_topics: list
+    other_topics: list
+    weekday_minutes: int
+    weekend_minutes: int
+
+    @property
+    def has_topics(self):
+        return bool(self.topics)
+
+    @property
+    def valid_topic_ids(self):
+        return {topic.id for topic in self.topics}
+
+
+def build_planner_context(user, week_start=None):
+    if week_start is None:
+        resolved_start, resolved_end = get_week_bounds()
+    else:
+        resolved_start = week_start
+        resolved_end = week_start + timedelta(days=6)
+
+    pending_topics = list(get_user_pending_topics(user))
+    high_topics = [t for t in pending_topics if t.priority == Topic.Priority.HIGH]
+    other_topics = [t for t in pending_topics if t.priority != Topic.Priority.HIGH]
+
+    weekday_minutes = 60
+    weekend_minutes = 60
+    if hasattr(user, "profile"):
+        weekday_minutes = user.profile.daily_study_minutes_weekday
+        weekend_minutes = user.profile.daily_study_minutes_weekend
+
+    return PlannerContext(
+        user=user,
+        week_start=resolved_start,
+        week_end=resolved_end,
+        topics=pending_topics,
+        high_priority_topics=high_topics,
+        other_topics=other_topics,
+        weekday_minutes=weekday_minutes,
+        weekend_minutes=weekend_minutes,
+    )
+
+
+def build_deterministic_weekly_plan(context):
     day_budgets = {
-        day: (weekday_minutes if day < 5 else weekend_minutes)
+        day: (context.weekday_minutes if day < 5 else context.weekend_minutes)
         for day in range(7)
     }
     available_days = [day for day, budget in day_budgets.items() if budget >= 15]
@@ -159,33 +209,45 @@ def build_deterministic_weekly_plan(topics, weekday_minutes, weekend_minutes):
         day_budgets = {day: 60 for day in available_days}
 
     items = []
-    topic_index = 0
-    total_topics = len(topics)
+    other_index = 0
+    total_other = len(context.other_topics)
 
     for day in available_days:
         budget = day_budgets[day]
-        if budget <= 60:
-            session_durations = [budget]
-        elif budget <= 120:
-            session_durations = [budget // 2, budget - (budget // 2)]
-        else:
-            session_durations = [60, budget - 60]
-
         order = 1
-        for duration in session_durations:
-            if duration < 15:
-                continue
-            topic = topics[topic_index % total_topics]
-            topic_index += 1
+        remaining_budget = budget
+
+        if context.high_priority_topics:
+            num_high = len(context.high_priority_topics)
+            target_high_budget = budget if total_other == 0 else max(30, (budget * 2) // 3)
+            high_duration = max(15, target_high_budget // num_high)
+
+            for high_topic in context.high_priority_topics:
+                if remaining_budget < 15:
+                    break
+                session_time = min(high_duration, remaining_budget)
+                items.append(
+                    {
+                        "day_of_week": day,
+                        "topic_id": high_topic.id,
+                        "duration_minutes": session_time,
+                        "order": order,
+                    }
+                )
+                order += 1
+                remaining_budget -= session_time
+
+        if total_other > 0 and remaining_budget >= 15:
+            topic = context.other_topics[other_index % total_other]
+            other_index += 1
             items.append(
                 {
                     "day_of_week": day,
                     "topic_id": topic.id,
-                    "duration_minutes": duration,
+                    "duration_minutes": remaining_budget,
                     "order": order,
                 }
             )
-            order += 1
 
     return items
 
@@ -200,10 +262,7 @@ def can_reuse_previous_plan(user, previous_plan, current_topics):
     previous_topic_ids = {item.topic_id for item in previous_items}
     current_topic_ids = {t.id for t in current_topics}
 
-    if previous_topic_ids != current_topic_ids:
-        return False
-
-    return True
+    return previous_topic_ids == current_topic_ids
 
 
 def replicate_weekly_plan(previous_plan, new_week_start):
@@ -231,38 +290,21 @@ def replicate_weekly_plan(previous_plan, new_week_start):
         return plan
 
 
-def generate_weekly_plan_with_ai(user, week_start=None, force_refresh=False):
-    if week_start is None:
-        week_start, week_end = get_week_bounds()
-    else:
-        week_end = week_start + timedelta(days=6)
-
-    topics = list(get_user_pending_topics(user))
-    if not topics:
+def try_reuse_previous_plan(context, force_refresh=False):
+    if force_refresh:
         return None
+    previous_week_start = context.week_start - timedelta(days=7)
+    previous_plan = (
+        WeeklyPlan.objects.filter(user=context.user, week_start=previous_week_start)
+        .prefetch_related("items")
+        .first()
+    )
+    if can_reuse_previous_plan(context.user, previous_plan, context.topics):
+        return replicate_weekly_plan(previous_plan, context.week_start)
+    return None
 
-    weekday_minutes = 60
-    weekend_minutes = 60
-    if hasattr(user, "profile"):
-        weekday_minutes = user.profile.daily_study_minutes_weekday
-        weekend_minutes = user.profile.daily_study_minutes_weekend
 
-    existing_plan = WeeklyPlan.objects.filter(
-        user=user, week_start=week_start
-    ).first()
-    if existing_plan and existing_plan.items.exists() and not force_refresh:
-        return existing_plan
-
-    if not force_refresh:
-        previous_week_start = week_start - timedelta(days=7)
-        previous_plan = (
-            WeeklyPlan.objects.filter(user=user, week_start=previous_week_start)
-            .prefetch_related("items")
-            .first()
-        )
-        if can_reuse_previous_plan(user, previous_plan, topics):
-            return replicate_weekly_plan(previous_plan, week_start)
-
+def try_generate_with_ai(context):
     topics_payload = [
         {
             "id": t.id,
@@ -270,18 +312,16 @@ def generate_weekly_plan_with_ai(user, week_start=None, force_refresh=False):
             "subject": t.subject.name,
             "priority": t.priority,
         }
-        for t in topics
+        for t in context.topics
     ]
     prompt_content = build_weekly_planner_prompt(
-        username=user.username,
+        username=context.user.username,
         topics_payload=topics_payload,
-        weekday_minutes=weekday_minutes,
-        weekend_minutes=weekend_minutes,
-        week_start=week_start,
-        week_end=week_end,
+        weekday_minutes=context.weekday_minutes,
+        weekend_minutes=context.weekend_minutes,
+        week_start=context.week_start,
+        week_end=context.week_end,
     )
-    valid_topic_ids = {t.id for t in topics}
-
     try:
         provider = get_ai_provider()
         messages = [
@@ -289,19 +329,17 @@ def generate_weekly_plan_with_ai(user, week_start=None, force_refresh=False):
             {"role": "user", "content": prompt_content},
         ]
         response_json = provider.generate_json(messages)
-        items_data = validate_weekly_planner_response(
-            response_json, valid_topic_ids
-        )
+        return validate_weekly_planner_response(response_json, context.valid_topic_ids)
     except Exception:
-        items_data = build_deterministic_weekly_plan(
-            topics, weekday_minutes, weekend_minutes
-        )
+        return None
 
+
+def persist_weekly_plan(context, items_data):
     with transaction.atomic():
         plan, _ = WeeklyPlan.objects.get_or_create(
-            user=user,
-            week_start=week_start,
-            defaults={"week_end": week_end},
+            user=context.user,
+            week_start=context.week_start,
+            defaults={"week_end": context.week_end},
         )
         plan.items.all().delete()
         plan_items = [
@@ -316,4 +354,24 @@ def generate_weekly_plan_with_ai(user, week_start=None, force_refresh=False):
         ]
         WeeklyPlanItem.objects.bulk_create(plan_items)
         return plan
+
+
+def generate_weekly_plan_with_ai(user, week_start=None, force_refresh=False):
+    context = build_planner_context(user, week_start)
+    if not context.has_topics:
+        return None
+
+    existing_plan = WeeklyPlan.objects.filter(
+        user=user, week_start=context.week_start
+    ).first()
+    if existing_plan and existing_plan.items.exists() and not force_refresh:
+        return existing_plan
+
+    reused_plan = try_reuse_previous_plan(context, force_refresh)
+    if reused_plan:
+        return reused_plan
+
+    items_data = try_generate_with_ai(context) or build_deterministic_weekly_plan(context)
+    return persist_weekly_plan(context, items_data)
+
 
