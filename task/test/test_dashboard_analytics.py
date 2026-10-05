@@ -24,7 +24,7 @@ class DashboardAnalyticsTest(TestCase):
         self.client.force_login(self.user)
 
     def test_weekly_net_time_subtracts_pauses(self):
-        start_time = timezone.now() - timedelta(hours=2)
+        start_time = timezone.now().replace(hour=12, minute=0, second=0)
         session = StudySession.objects.create(
             user=self.user,
             topic=self.topic,

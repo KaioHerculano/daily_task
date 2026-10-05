@@ -263,6 +263,20 @@
     .xl\:tw-col-span-5 { grid-column: span 5 / span 5; }
     .xl\:tw-col-span-4 { grid-column: span 4 / span 4; }
   }
+
+  .weekly-item-completed {
+    opacity: 0.55;
+  }
+  .weekly-item-completed .weekly-item-title {
+    text-decoration: line-through;
+    color: var(--dt-text-muted) !important;
+  }
+  .weekly-day-card {
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .weekly-plan-item {
+    transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+  }
 </style>
 {% endblock %}
 
@@ -384,6 +398,121 @@
                 <p class="tw-mt-2 tw-text-sm tw-text-slate-500 tw-mb-0">{{ latest_insight.next_actions|default:"Sem próximos passos registrados ainda." }}</p>
               </div>
             </div>
+          </div>
+        {% endif %}
+      </article>
+    </section>
+
+    <section class="tw-space-y-4">
+      <article class="tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-6 tw-shadow-soft">
+        <div class="tw-flex tw-flex-col tw-gap-3 sm:tw-flex-row sm:tw-items-center sm:tw-justify-between">
+          <div>
+            <div class="tw-flex tw-items-center tw-gap-2">
+              <p class="tw-text-sm tw-font-medium tw-text-blue-600 tw-mb-0">Weekly Notes</p>
+              <span class="tw-rounded-full tw-bg-blue-50 tw-px-2.5 tw-py-0.5 tw-text-xs tw-font-medium tw-text-blue-700">Planejador Semanal</span>
+            </div>
+            <h2 class="tw-mt-1 tw-text-lg tw-font-semibold tw-text-slate-950 tw-mb-0">Cronograma Estratégico de Estudos</h2>
+            <p class="tw-mt-1 tw-text-sm tw-text-slate-500 tw-mb-0">
+              Semana de {{ weekly_plan_week_start|date:"d/m" }} a {{ weekly_plan_week_end|date:"d/m" }}
+              {% if weekly_plan %}
+                · <span id="weekly-plan-header-summary">{{ weekly_plan_completed_items }}/{{ weekly_plan_total_items }} concluídos ({{ weekly_plan_total_completed_label }} de {{ weekly_plan_total_planned_label }})</span>
+              {% endif %}
+            </p>
+          </div>
+
+          <div class="tw-flex tw-items-center tw-gap-2">
+            {% if weekly_plan %}
+              <button type="button" @click="generateWeeklyPlan()" :disabled="generatingPlan" class="tw-inline-flex tw-h-9 tw-items-center tw-justify-center tw-gap-1.5 tw-rounded-lg tw-border tw-border-slate-200 tw-bg-white tw-px-3 tw-text-sm tw-font-medium tw-text-slate-700 hover:tw-bg-slate-50">
+                <i class="bi bi-arrow-repeat"></i>
+                <span x-text="generatingPlan ? 'Gerando...' : 'Regerar Plano'">Regerar Plano</span>
+              </button>
+            {% else %}
+              <button type="button" @click="generateWeeklyPlan()" :disabled="generatingPlan" class="tw-inline-flex tw-h-9 tw-items-center tw-justify-center tw-gap-1.5 tw-rounded-lg tw-bg-blue-600 tw-px-3 tw-text-sm tw-font-medium tw-text-white hover:tw-bg-blue-700">
+                <i class="bi bi-stars"></i>
+                <span x-text="generatingPlan ? 'Gerando...' : 'Gerar Plano com IA'">Gerar Plano com IA</span>
+              </button>
+            {% endif %}
+          </div>
+        </div>
+
+        {% if weekly_plan and weekly_plan.items.exists %}
+          <div class="tw-mt-4 tw-space-y-1">
+            <div class="tw-flex tw-items-center tw-justify-between tw-text-xs tw-text-slate-500">
+              <span>Progresso geral da semana</span>
+              <span id="weekly-plan-progress-percent" class="tw-font-medium tw-text-blue-700">{{ weekly_plan_completion_percentage }}%</span>
+            </div>
+            <div class="tw-h-2 tw-rounded-full tw-bg-slate-100 tw-overflow-hidden">
+              <div id="weekly-plan-progress-bar" class="tw-h-2 tw-rounded-full tw-bg-blue-600" style="width: {{ weekly_plan_completion_percentage }}%;"></div>
+            </div>
+          </div>
+
+          <div class="tw-mt-6 tw-grid tw-grid-cols-1 tw-gap-4 sm:tw-grid-cols-2 md:tw-grid-cols-3 lg:tw-grid-cols-7">
+            {% for day in weekly_plan_days %}
+              <div class="weekly-day-card tw-flex tw-flex-col tw-rounded-xl tw-border {% if day.is_today %}tw-border-blue-500{% else %}tw-border-slate-200{% endif %} tw-bg-slate-50 tw-p-3" data-day="{{ day.day_of_week }}">
+                <div class="tw-flex tw-items-center tw-justify-between tw-border-b tw-border-slate-200 tw-pb-2">
+                  <div>
+                    <span class="tw-text-xs tw-font-semibold tw-text-slate-900">{{ day.short_name }}</span>
+                    <span class="tw-text-xs tw-text-slate-500">({{ day.date|date:"d/m" }})</span>
+                  </div>
+                  {% if day.is_today %}
+                    <span class="badge bg-primary" style="font-size: 9px; padding: 2px 4px;">Hoje</span>
+                  {% endif %}
+                </div>
+
+                <div class="tw-my-2 tw-flex tw-items-center tw-justify-between tw-text-xs tw-text-slate-500">
+                  <span id="day-completed-{{ day.day_of_week }}" class="tw-font-medium tw-text-slate-700">{{ day.completed_label }}</span>
+                  <span>/</span>
+                  <span id="day-planned-{{ day.day_of_week }}">{{ day.planned_label }}</span>
+                </div>
+
+                <div class="tw-flex-1 tw-space-y-2">
+                  {% for item in day.items %}
+                    <div id="weekly-plan-item-{{ item.id }}" class="weekly-plan-item tw-rounded-lg tw-border tw-border-slate-200 tw-bg-white tw-p-2.5 tw-shadow-sm {% if item.is_completed %}weekly-item-completed{% endif %}" data-duration="{{ item.duration_minutes }}" data-day="{{ day.day_of_week }}">
+                      <div class="tw-flex tw-items-start tw-gap-2">
+                        <input type="checkbox" id="check-item-{{ item.id }}" class="form-check-input tw-mt-0.5 tw-shrink-0" {% if item.is_completed %}checked{% endif %} @change="togglePlanItem({{ item.id }}, $event)">
+                        <div class="tw-min-w-0 tw-flex-1">
+                          <div class="tw-flex tw-items-center tw-gap-1.5 tw-flex-wrap">
+                            <span class="weekly-item-title tw-text-xs tw-font-medium tw-text-slate-900 tw-truncate">{{ item.topic.name }}</span>
+                          </div>
+                          <div class="tw-mt-1 tw-flex tw-items-center tw-justify-between tw-gap-1">
+                            <span class="tw-text-[11px] tw-text-slate-500 tw-truncate">{{ item.topic.subject.name }}</span>
+                            <span class="tw-text-[10px] tw-font-medium tw-text-slate-400 tw-shrink-0">{{ item.duration_minutes }}m</span>
+                          </div>
+                          <div class="tw-mt-1.5 tw-flex tw-items-center tw-justify-between">
+                            {% if item.topic.priority == "HIGH" %}
+                              <span class="badge bg-danger" style="font-size: 9px; padding: 2px 4px;">Alta</span>
+                            {% elif item.topic.priority == "MEDIUM" %}
+                              <span class="badge bg-warning text-dark" style="font-size: 9px; padding: 2px 4px;">Média</span>
+                            {% elif item.topic.priority == "LOW" %}
+                              <span class="badge bg-secondary" style="font-size: 9px; padding: 2px 4px;">Baixa</span>
+                            {% endif %}
+                            <button type="button" class="study-play-button" style="width: 1.5rem; height: 1.5rem; font-size: 0.75rem;" @click="openStartSession({{ item.topic.id }})" title="Iniciar estudo deste tópico" :disabled="loading || {{ active_session|yesno:'true,false' }}">
+                              <i class="bi bi-play-fill"></i>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  {% empty %}
+                    <div class="tw-flex tw-h-20 tw-items-center tw-justify-center tw-rounded-lg tw-border tw-border-dashed tw-border-slate-200 tw-text-center">
+                      <span class="tw-text-[11px] tw-text-slate-400">Sem estudos</span>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="tw-mt-4 tw-rounded-xl tw-border tw-border-dashed tw-border-slate-300 tw-p-8 tw-text-center">
+            <i class="bi bi-calendar-week tw-text-3xl tw-text-blue-600"></i>
+            <h3 class="tw-mt-2 tw-text-sm tw-font-semibold tw-text-slate-950">Nenhum plano gerado para esta semana</h3>
+            <p class="tw-mt-1 tw-text-xs tw-text-slate-500 tw-max-w-md tw-mx-auto">
+              Clique no botão abaixo para gerar automaticamente seu cronograma de estudos com inteligência artificial baseado nas suas matérias e disponibilidade.
+            </p>
+            <button type="button" @click="generateWeeklyPlan()" :disabled="generatingPlan" class="tw-mt-4 tw-inline-flex tw-h-9 tw-items-center tw-justify-center tw-gap-1.5 tw-rounded-lg tw-bg-blue-600 tw-px-4 tw-text-sm tw-font-medium tw-text-white hover:tw-bg-blue-700">
+              <i class="bi bi-stars"></i>
+              <span x-text="generatingPlan ? 'Gerando plano...' : 'Gerar Plano Semanal com IA'">Gerar Plano Semanal com IA</span>
+            </button>
           </div>
         {% endif %}
       </article>
@@ -879,6 +1008,115 @@
             } finally {
                 this.loading = false;
             }
+        },
+
+        generatingPlan: false,
+
+        async generateWeeklyPlan() {
+            this.generatingPlan = true;
+            try {
+                const response = await fetch("{% url 'generate_weekly_plan' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': this.getCookie('csrftoken'),
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    alert(data.message || "Erro ao gerar plano.");
+                }
+            } catch (error) {
+                console.error("Erro ao solicitar geracao de plano:", error);
+                alert("Erro ao solicitar geração de plano.");
+            } finally {
+                this.generatingPlan = false;
+            }
+        },
+
+        async togglePlanItem(itemId, event) {
+            const checkbox = event.target;
+            const wasChecked = !checkbox.checked;
+            try {
+                const response = await fetch(`/weekly-plan/item/${itemId}/toggle/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': this.getCookie('csrftoken'),
+                        'Accept': 'application/json'
+                    }
+                });
+                if (!response.ok) {
+                    checkbox.checked = wasChecked;
+                    const errData = await response.json();
+                    alert(errData.message || "Erro ao atualizar item.");
+                    return;
+                }
+                const data = await response.json();
+                const itemRow = document.getElementById(`weekly-plan-item-${itemId}`);
+                if (itemRow) {
+                    if (data.is_completed) {
+                        itemRow.classList.add('weekly-item-completed');
+                    } else {
+                        itemRow.classList.remove('weekly-item-completed');
+                    }
+                }
+                this.updateWeeklyNotesTotals();
+            } catch (error) {
+                console.error("Erro ao alternar item do plano:", error);
+                checkbox.checked = wasChecked;
+                alert("Erro de comunicação ao atualizar o item.");
+            }
+        },
+
+        updateWeeklyNotesTotals() {
+            let grandPlanned = 0;
+            let grandCompleted = 0;
+            let totalItems = 0;
+            let completedItems = 0;
+
+            for (let day = 0; day < 7; day++) {
+                const dayCards = document.querySelectorAll(`.weekly-plan-item[data-day="${day}"]`);
+                let dayPlanned = 0;
+                let dayCompleted = 0;
+                dayCards.forEach(card => {
+                    const duration = parseInt(card.dataset.duration || '0', 10);
+                    dayPlanned += duration;
+                    totalItems++;
+                    if (card.classList.contains('weekly-item-completed')) {
+                        dayCompleted += duration;
+                        completedItems++;
+                    }
+                });
+                grandPlanned += dayPlanned;
+                grandCompleted += dayCompleted;
+
+                const dayPlannedEl = document.getElementById(`day-planned-${day}`);
+                const dayCompletedEl = document.getElementById(`day-completed-${day}`);
+                if (dayPlannedEl) dayPlannedEl.textContent = this.formatDurationMinutes(dayPlanned);
+                if (dayCompletedEl) dayCompletedEl.textContent = this.formatDurationMinutes(dayCompleted);
+            }
+
+            const pct = grandPlanned > 0 ? Math.round((grandCompleted / grandPlanned) * 100) : 0;
+            const progressPercentEl = document.getElementById('weekly-plan-progress-percent');
+            const progressBarEl = document.getElementById('weekly-plan-progress-bar');
+            const headerSummaryEl = document.getElementById('weekly-plan-header-summary');
+
+            if (progressPercentEl) progressPercentEl.textContent = `${pct}%`;
+            if (progressBarEl) progressBarEl.style.width = `${pct}%`;
+            if (headerSummaryEl) {
+                headerSummaryEl.textContent = `${completedItems}/${totalItems} concluídos (${this.formatDurationMinutes(grandCompleted)} de ${this.formatDurationMinutes(grandPlanned)})`;
+            }
+        },
+
+        formatDurationMinutes(totalMinutes) {
+            const hours = Math.floor(totalMinutes / 60);
+            const minutes = totalMinutes % 60;
+            if (hours && minutes) return `${hours}h${minutes < 10 ? '0' : ''}${minutes}min`;
+            if (hours) return `${hours}h`;
+            return `${minutes}min`;
         }
     }));
   });

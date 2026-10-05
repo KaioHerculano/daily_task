@@ -10,7 +10,7 @@ from django.views.generic.edit import CreateView
 
 from . import services
 from .ai_services import generate_weekly_plan_with_ai
-from .exceptions import TimerPersistenceError
+from .exceptions import InvalidPlanItemError, TimerPersistenceError
 from .forms import SubjectForm, TaskDayForm, TopicForm
 from .models import Subject, Topic
 from .study_services import (
@@ -294,4 +294,28 @@ class WeeklyPlanGenerateView(LoginRequiredMixin, View):
 
         messages.success(request, "Plano semanal gerado com sucesso!")
         return redirect("dashboard")
+
+
+class WeeklyPlanItemToggleView(LoginRequiredMixin, View):
+
+    def post(self, request, pk):
+        try:
+            item = services.toggle_plan_item_status(request.user, pk)
+            return JsonResponse(
+                {
+                    "status": "success",
+                    "item_id": item.id,
+                    "is_completed": item.is_completed,
+                    "completed_at": (
+                        item.completed_at.isoformat() if item.completed_at else None
+                    ),
+                    "day_of_week": item.day_of_week,
+                    "duration_minutes": item.duration_minutes,
+                }
+            )
+        except InvalidPlanItemError as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=404)
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
 

@@ -30,6 +30,15 @@ def format_duration_hours(value):
     return f"{minutes}min"
 
 
+def format_duration_minutes(total_minutes):
+    hours, minutes = divmod(total_minutes, 60)
+    if hours and minutes:
+        return f"{hours}h{minutes:02d}min"
+    if hours:
+        return f"{hours}h"
+    return f"{minutes}min"
+
+
 def get_streak_data(user):
     dates = list(
         TaskDay.objects.filter(user=user)
@@ -210,6 +219,7 @@ def get_study_dashboard_context(user, request):
     context.update(get_streak_data(user))
     context.update(get_weekly_goal_data(user))
     context.update(get_weekly_net_time(user))
+    context.update(get_weekly_plan_context(user))
     context["delayed_topics"] = get_delayed_topics(user)
     context["latest_insight"] = get_latest_insight(user)
     context["subjects"] = get_active_subjects_with_topics(user)
@@ -373,4 +383,86 @@ def create_weekly_plan(user, week_start, items_data=None):
             ]
             WeeklyPlanItem.objects.bulk_create(items)
         return plan
+
+
+def get_weekly_plan_context(user, reference_date=None):
+    plan = get_current_week_plan(user, reference_date)
+    if reference_date is None:
+        today = timezone.localdate()
+    elif hasattr(reference_date, "date"):
+        today = reference_date.date()
+    else:
+        today = reference_date
+
+    week_start = today - timedelta(days=today.weekday())
+    week_end = week_start + timedelta(days=6)
+
+    day_names = [
+        "Segunda-feira",
+        "Terça-feira",
+        "Quarta-feira",
+        "Quinta-feira",
+        "Sexta-feira",
+        "Sábado",
+        "Domingo",
+    ]
+    day_short_names = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"]
+
+    days_data = []
+    total_planned = 0
+    total_completed = 0
+    all_items_count = 0
+    completed_items_count = 0
+
+    plan_items = list(plan.items.all()) if plan else []
+
+    for day_idx in range(7):
+        day_date = week_start + timedelta(days=day_idx)
+        items_for_day = [item for item in plan_items if item.day_of_week == day_idx]
+        planned_m = sum(item.duration_minutes for item in items_for_day)
+        completed_m = sum(
+            item.duration_minutes for item in items_for_day if item.is_completed
+        )
+        completed_c = sum(1 for item in items_for_day if item.is_completed)
+
+        total_planned += planned_m
+        total_completed += completed_m
+        all_items_count += len(items_for_day)
+        completed_items_count += completed_c
+
+        days_data.append(
+            {
+                "day_of_week": day_idx,
+                "day_name": day_names[day_idx],
+                "short_name": day_short_names[day_idx],
+                "date": day_date,
+                "items": items_for_day,
+                "planned_minutes": planned_m,
+                "completed_minutes": completed_m,
+                "planned_label": format_duration_minutes(planned_m),
+                "completed_label": format_duration_minutes(completed_m),
+                "total_items": len(items_for_day),
+                "completed_items": completed_c,
+                "is_today": day_date == today,
+            }
+        )
+
+    completion_percentage = (
+        round((total_completed / total_planned) * 100) if total_planned > 0 else 0
+    )
+
+    return {
+        "weekly_plan": plan,
+        "weekly_plan_days": days_data,
+        "weekly_plan_week_start": week_start,
+        "weekly_plan_week_end": week_end,
+        "weekly_plan_total_planned_minutes": total_planned,
+        "weekly_plan_total_completed_minutes": total_completed,
+        "weekly_plan_total_planned_label": format_duration_minutes(total_planned),
+        "weekly_plan_total_completed_label": format_duration_minutes(total_completed),
+        "weekly_plan_total_items": all_items_count,
+        "weekly_plan_completed_items": completed_items_count,
+        "weekly_plan_completion_percentage": completion_percentage,
+    }
+
 

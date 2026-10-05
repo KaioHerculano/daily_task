@@ -24,7 +24,7 @@ class StudyInsightTest(TestCase):
         )
         self.subject = Subject.objects.create(user=self.user, name="Physics")
         self.topic = Topic.objects.create(subject=self.subject, name="Kinematics")
-        start_time = timezone.now() - timedelta(hours=1)
+        start_time = timezone.now().replace(hour=12, minute=0, second=0)
         StudySession.objects.create(
             user=self.user,
             topic=self.topic,

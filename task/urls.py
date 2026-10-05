@@ -47,4 +47,9 @@ urlpatterns = [
         views.WeeklyPlanGenerateView.as_view(),
         name="generate_weekly_plan",
     ),
+    path(
+        "weekly-plan/item/<int:pk>/toggle/",
+        views.WeeklyPlanItemToggleView.as_view(),
+        name="toggle_weekly_plan_item",
+    ),
 ]
