@@ -1,0 +1,8 @@
+Olá {{ user.username }},
+
+Seu plano estratégico de estudos para esta semana foi gerado com sucesso.
+
+Organizamos seus tópicos e horários para otimizar seu aprendizado e manter sua consistência nos estudos.
+
+Acesse sua dashboard para conferir seu cronograma semanal e começar a estudar:
+{{ base_url }}/

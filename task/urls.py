@@ -42,4 +42,9 @@ urlpatterns = [
         views.TopicCompleteView.as_view(),
         name="complete_topic",
     ),
+    path(
+        "weekly-plan/generate/",
+        views.WeeklyPlanGenerateView.as_view(),
+        name="generate_weekly_plan",
+    ),
 ]

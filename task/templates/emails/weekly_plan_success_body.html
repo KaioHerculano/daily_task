@@ -1,0 +1,10 @@
+{% extends "base_email.html" %}
+
+{% block content %}
+    <h2>Olá, {{ user.username }}!</h2>
+    <p>Seu plano estratégico de estudos para esta semana foi gerado com sucesso.</p>
+    <p>Organizamos seus tópicos e horários para otimizar seu aprendizado e manter sua consistência nos estudos.</p>
+    <div style="text-align: center;">
+        <a href="{{ base_url }}/" class="btn">Acessar Meu Plano Semanal</a>
+    </div>
+{% endblock %}

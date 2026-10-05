@@ -1,0 +1,10 @@
+{% extends "base_email.html" %}
+
+{% block content %}
+    <h2>Olá, {{ user.username }}!</h2>
+    <p>Não foi possível gerar automaticamente o seu plano estratégico de estudos para esta semana.</p>
+    <p>Isso pode acontecer caso você não tenha tópicos pendentes cadastrados ou devido a uma oscilação temporária em nosso serviço.</p>
+    <div style="text-align: center;">
+        <a href="{{ base_url }}/" class="btn">Acessar Daily Task</a>
+    </div>
+{% endblock %}

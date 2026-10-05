@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.cache import cache
 from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
@@ -8,6 +9,7 @@ from django.views.generic import TemplateView
 from django.views.generic.edit import CreateView
 
 from . import services
+from .ai_services import generate_weekly_plan_with_ai
 from .exceptions import TimerPersistenceError
 from .forms import SubjectForm, TaskDayForm, TopicForm
 from .models import Subject, Topic
@@ -242,3 +244,54 @@ class TopicUpdateView(LoginRequiredMixin, View):
         except TimerPersistenceError as e:
             messages.error(request, str(e))
         return redirect("dashboard")
+
+
+class WeeklyPlanGenerateView(LoginRequiredMixin, View):
+
+    def post(self, request):
+        cache_key = f"rate_limit_weekly_plan_{request.user.id}"
+        if cache.get(cache_key):
+            if request.headers.get("x-requested-with") == "XMLHttpRequest" or "application/json" in request.headers.get("Accept", ""):
+                return JsonResponse(
+                    {
+                        "status": "error",
+                        "message": "Aguarde 60 segundos antes de solicitar uma nova geração de plano.",
+                    },
+                    status=429,
+                )
+            messages.warning(
+                request,
+                "Aguarde 60 segundos antes de solicitar uma nova geração de plano.",
+            )
+            return redirect("dashboard")
+
+        plan = generate_weekly_plan_with_ai(request.user, force_refresh=True)
+        cache.set(cache_key, True, timeout=60)
+
+        if not plan:
+            if request.headers.get("x-requested-with") == "XMLHttpRequest" or "application/json" in request.headers.get("Accept", ""):
+                return JsonResponse(
+                    {
+                        "status": "error",
+                        "message": "Nenhum tópico pendente encontrado para gerar o plano semanal.",
+                    },
+                    status=400,
+                )
+            messages.warning(
+                request,
+                "Cadastre matérias e tópicos pendentes para gerar o plano semanal.",
+            )
+            return redirect("dashboard")
+
+        if request.headers.get("x-requested-with") == "XMLHttpRequest" or "application/json" in request.headers.get("Accept", ""):
+            return JsonResponse(
+                {
+                    "status": "success",
+                    "message": "Plano semanal gerado com sucesso!",
+                    "plan_id": plan.id,
+                }
+            )
+
+        messages.success(request, "Plano semanal gerado com sucesso!")
+        return redirect("dashboard")
+

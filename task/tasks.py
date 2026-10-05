@@ -11,7 +11,7 @@ from django.utils import timezone
 from utils.security import mask_email
 
 from .ai_services import generate_weekly_insights
-from .models import DailyReminderLog, TaskDay
+from .models import DailyReminderLog, TaskDay, WeeklyPlan
 
 logger = logging.getLogger(__name__)
 
@@ -84,3 +84,104 @@ def generate_weekly_study_insights():
     insights = generate_weekly_insights(reference_date=reference_date)
     logger.info(f"[INSIGHTS] Insights semanais gerados: {len(insights)}")
     return len(insights)
+
+
+@shared_task
+def generate_weekly_plans(reference_date=None):
+    from .ai_services import generate_weekly_plan_with_ai
+
+    users = (
+        User.objects.filter(
+            is_active=True,
+            subjects__is_active=True,
+            subjects__completed_at__isnull=True,
+            subjects__topics__is_active=True,
+            subjects__topics__completed_at__isnull=True,
+        )
+        .distinct()
+    )
+    generated_count = 0
+    for user in users:
+        try:
+            plan = generate_weekly_plan_with_ai(
+                user, week_start=reference_date, force_refresh=False
+            )
+            if plan:
+                generated_count += 1
+                if user.email:
+                    send_weekly_plan_email.delay(
+                        user.id, plan_id=getattr(plan, "id", None), status="success"
+                    )
+            elif user.email:
+                send_weekly_plan_email.delay(
+                    user.id, plan_id=None, status="failure"
+                )
+        except Exception as exc:
+            logger.error(f"[PLANNER] Erro ao gerar plano para {user.username}: {exc}")
+            if user.email:
+                send_weekly_plan_email.delay(
+                    user.id, plan_id=None, status="failure"
+                )
+
+    logger.info(f"[PLANNER] Planos semanais gerados: {generated_count}")
+    return generated_count
+
+
+@shared_task(
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_backoff=True,
+    retry_kwargs={"max_retries": 3},
+)
+def send_weekly_plan_email(self, user_id, plan_id=None, status="success"):
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return
+
+    if not user.email:
+        return
+
+    plan = None
+    if plan_id:
+        try:
+            plan = WeeklyPlan.objects.get(id=plan_id)
+        except WeeklyPlan.DoesNotExist:
+            plan = None
+
+    context = {
+        "user": user,
+        "plan": plan,
+        "base_url": settings.BASE_URL,
+    }
+
+    if status == "success":
+        subject_template = "emails/weekly_plan_success_subject.txt"
+        body_template = "emails/weekly_plan_success_body.txt"
+        html_template = "emails/weekly_plan_success_body.html"
+    else:
+        subject_template = "emails/weekly_plan_failure_subject.txt"
+        body_template = "emails/weekly_plan_failure_body.txt"
+        html_template = "emails/weekly_plan_failure_body.html"
+
+    subject = render_to_string(subject_template, context).strip()
+    body = render_to_string(body_template, context)
+    html_email = render_to_string(html_template, context)
+    masked_to_email = mask_email(user.email)
+
+    try:
+        email_message = EmailMultiAlternatives(
+            subject, body, settings.DEFAULT_FROM_EMAIL, [user.email]
+        )
+        email_message.attach_alternative(html_email, "text/html")
+        email_message.send()
+        logger.info(
+            f"[PLANNER_EMAIL] Sucesso ao enviar notificacao ({status}) para {masked_to_email}"
+        )
+    except Exception as e:
+        logger.error(
+            f"[PLANNER_EMAIL] Erro ao enviar notificacao para {masked_to_email}: {str(e)}"
+        )
+        raise
+
+
