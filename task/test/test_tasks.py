@@ -7,9 +7,9 @@ from django.utils import timezone
 from faker import Faker
 
 from accounts.models import UserProfile
-from task.models import DailyReminderLog, TaskDay
+from task.models import DailyReminderLog, Subject, TaskDay, Topic
 from task.services import get_streak_data, get_weekly_goal_data
-from task.tasks import send_daily_reminders
+from task.tasks import generate_weekly_plans, send_daily_reminders
 
 fake = Faker()
 
@@ -56,3 +56,44 @@ class DailyReminderTaskTest(TestCase):
         processed_count_2 = send_daily_reminders()
         self.assertEqual(processed_count_2, 0)
         self.assertEqual(mock_process_reminder.call_count, 0)
+
+
+class WeeklyPlanTaskTest(TestCase):
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username=fake.user_name(), email=fake.email(), password=fake.password()
+        )
+        self.subject = Subject.objects.create(user=self.user, name="Software")
+        self.topic = Topic.objects.create(subject=self.subject, name="Architecture")
+
+    @patch("task.ai_services.generate_weekly_plan_with_ai")
+    def test_generate_weekly_plans_processes_active_users(self, mock_generate):
+        mock_generate.return_value = object()
+
+        inactive_user = User.objects.create_user(
+            username=fake.user_name(), email=fake.email(), password=fake.password()
+        )
+
+        count = generate_weekly_plans()
+
+        self.assertEqual(count, 1)
+        mock_generate.assert_called_once_with(
+            self.user, week_start=None, force_refresh=False
+        )
+
+    @patch("task.ai_services.generate_weekly_plan_with_ai")
+    def test_generate_weekly_plans_resilient_to_individual_failure(self, mock_generate):
+        user2 = User.objects.create_user(
+            username=fake.user_name(), email=fake.email(), password=fake.password()
+        )
+        subject2 = Subject.objects.create(user=user2, name="Math")
+        Topic.objects.create(subject=subject2, name="Algebra")
+
+        mock_generate.side_effect = [RuntimeError("AI failure"), object()]
+
+        count = generate_weekly_plans()
+
+        self.assertEqual(count, 1)
+        self.assertEqual(mock_generate.call_count, 2)
+
