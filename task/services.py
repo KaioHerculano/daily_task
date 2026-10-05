@@ -463,6 +463,7 @@ def get_weekly_plan_context(user, reference_date=None):
         "weekly_plan_total_items": all_items_count,
         "weekly_plan_completed_items": completed_items_count,
         "weekly_plan_completion_percentage": completion_percentage,
+        "weekly_plan_today_weekday": today.weekday(),
     }
 
 
