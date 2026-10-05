@@ -84,3 +84,33 @@ def generate_weekly_study_insights():
     insights = generate_weekly_insights(reference_date=reference_date)
     logger.info(f"[INSIGHTS] Insights semanais gerados: {len(insights)}")
     return len(insights)
+
+
+@shared_task
+def generate_weekly_plans(reference_date=None):
+    from .ai_services import generate_weekly_plan_with_ai
+
+    users = (
+        User.objects.filter(
+            is_active=True,
+            subjects__is_active=True,
+            subjects__completed_at__isnull=True,
+            subjects__topics__is_active=True,
+            subjects__topics__completed_at__isnull=True,
+        )
+        .distinct()
+    )
+    generated_count = 0
+    for user in users:
+        try:
+            plan = generate_weekly_plan_with_ai(
+                user, week_start=reference_date, force_refresh=False
+            )
+            if plan:
+                generated_count += 1
+        except Exception as exc:
+            logger.error(f"[PLANNER] Erro ao gerar plano para {user.username}: {exc}")
+
+    logger.info(f"[PLANNER] Planos semanais gerados: {generated_count}")
+    return generated_count
+

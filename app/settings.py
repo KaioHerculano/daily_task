@@ -186,6 +186,10 @@ CELERY_BEAT_SCHEDULE = {
         "task": "task.tasks.generate_weekly_study_insights",
         "schedule": crontab(day_of_week="mon", hour=6, minute=0),
     },
+    "gerar-planos-semanais-segunda-as-06h30": {
+        "task": "task.tasks.generate_weekly_plans",
+        "schedule": crontab(day_of_week="mon", hour=6, minute=30),
+    },
 }
 
 BASE_URL = config("BASE_URL", default="http://127.0.0.1:8000")
